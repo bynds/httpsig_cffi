@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import json
 import unittest
 
-from http_signature.verify import HeaderVerifier, Verifier
-from http_signature.sign import HeaderSigner, Signer
+from httpsig.verify import HeaderVerifier, Verifier
+from httpsig.sign import HeaderSigner, Signer
 
 
 class TestVerify(unittest.TestCase):
@@ -33,10 +33,10 @@ class TestVerify(unittest.TestCase):
         verifier = Verifier(key_id=self.public_key)
 
         # generate signed string
-        signature = signer.sign("this is a test")
-        self.assertTrue(verifier.verify(data="this is a test",
+        signature = signer._sign("this is a test")
+        self.assertTrue(verifier._verify(data="this is a test",
                                         signature=signature))
-        self.assertFalse(verifier.verify(data="this is not the signature you were looking for...",
+        self.assertFalse(verifier._verify(data="this is not the signature you were looking for...",
                                          signature=signature))
 
     def test_default(self):
@@ -49,14 +49,14 @@ class TestVerify(unittest.TestCase):
         }
         signed = hs.sign(unsigned)
         hv = HeaderVerifier(headers=signed)
-        self.assertTrue(hv.verify_headers())
+        self.assertTrue(hv.verify())
 
     def test_signed_headers(self):
         HOST = "example.com"
         METHOD = "POST"
         PATH = '/foo?param=value&pet=dog'
         hs = HeaderSigner(key_id=self.public_key, secret=self.private_key, headers=[
-            'request-line',
+            '(request-line)',
             'host',
             'date',
             'content-type',
@@ -74,7 +74,7 @@ class TestVerify(unittest.TestCase):
                 path=PATH)
 
         hv = HeaderVerifier(headers=signed, host=HOST, method=METHOD, path=PATH)
-        self.assertTrue(hv.verify_headers())
+        self.assertTrue(hv.verify())
 
     def test_incorrect_headers(self):
         HOST = "example.com"
@@ -83,7 +83,7 @@ class TestVerify(unittest.TestCase):
         hs = HeaderSigner(secret=self.private_key,
                           key_id=self.public_key,
                           headers=[
-                            'request-line',
+                            '(request-line)',
                             'host',
                             'date',
                             'content-type',
@@ -101,7 +101,7 @@ class TestVerify(unittest.TestCase):
 
         hv = HeaderVerifier(headers=signed, required_headers=["some-other-header"], host=HOST, method=METHOD, path=PATH)
         with self.assertRaises(Exception) as ex:
-            hv.verify_headers()
+            hv.verify()
         self.assertEqual(ex.exception.message,
                         "some-other-header is a required header(s)")
 
@@ -110,7 +110,7 @@ class TestVerify(unittest.TestCase):
         METHOD = "POST"
         PATH = '/foo?param=value&pet=dog'
         hs = HeaderSigner(key_id=self.public_key, secret=self.private_key, headers=[
-            'request-line',
+            '(request-line)',
             'host',
             'date',
             'content-type',
@@ -124,11 +124,9 @@ class TestVerify(unittest.TestCase):
             'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
             'Content-Length': '18',
         }
-        signed = hs.sign(unsigned, method=METHOD,
-                path=PATH)
-        hv = HeaderVerifier(headers=signed, method=METHOD, path=PATH,
-                            required_headers=['date', 'request-line'])
-        self.assertTrue(hv.verify_headers())
+        signed = hs.sign(unsigned, method=METHOD, path=PATH)
+        hv = HeaderVerifier(headers=signed, method=METHOD, path=PATH, required_headers=['date', '(request-line)'])
+        self.assertTrue(hv.verify())
 
 if __name__ == "__main__":
     unittest.main()

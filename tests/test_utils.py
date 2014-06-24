@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import unittest
 
-from http_signature.utils import get_fingerprint
+from httpsig.utils import get_fingerprint
 
 class TestUtils(unittest.TestCase):
 

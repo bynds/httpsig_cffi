@@ -48,23 +48,23 @@ class Signer(object):
             rsa_key = RSA.importKey(k, pw)
         return PKCS1_v1_5.new(rsa_key)
 
-    def sign_rsa(self, sign_string):
+    def _sign_rsa(self, sign_string):
         h = self._hash.new()
         h.update(sign_string)
         return self._rsa.sign(h)
 
-    def sign_hmac(self, sign_string):
+    def _sign_hmac(self, sign_string):
         hmac = self._hash.copy()
         hmac.update(sign_string)
         return hmac.digest()
 
 
-    def sign(self, sign_string):
+    def _sign(self, sign_string):
         data = None
         if self._rsa:
-            data = self.sign_rsa(sign_string)
+            data = self._sign_rsa(sign_string)
         elif self._hash:
-            data = self.sign_hmac(sign_string)
+            data = self._sign_hmac(sign_string)
         if not data:
             raise SystemError('No valid encryption: try allow_agent=False ?')
         return base64.b64encode(data)
@@ -113,12 +113,15 @@ class HeaderSigner(Signer):
     algorithm is one of the six specified algorithms
     headers is a list of http headers to be included in the signing string, defaulting to "Date" alone.
     '''
-    def __init__(self, key_id='', secret='~/.ssh/id_rsa',
-            algorithm='rsa-sha256', headers=None):
+    def __init__(self, key_id='', secret='~/.ssh/id_rsa', algorithm='rsa-sha256', headers=None):
+        
+        #PyCrypto wants strings, not unicode. We're not so demanding as an API.
+        key_id = str(key_id)
+        secret = str(secret)
+        
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers
-        self.signature_template = self.build_signature_template(
-                key_id, algorithm, headers)
+        self.signature_template = self.build_signature_template(key_id, algorithm, headers)
 
     def build_signature_template(self, key_id, algorithm, headers):
         """
@@ -134,37 +137,40 @@ class HeaderSigner(Signer):
                      'algorithm': algorithm,
                      'signature': '%s'}
         if headers:
+            headers = [h.lower() for h in headers]
             param_map['headers'] = ' '.join(headers)
         kv = map('{0[0]}="{0[1]}"'.format, param_map.items())
         kv_string = ','.join(kv)
         sig_string = 'Signature {0}'.format(kv_string)
         return sig_string
 
-    def sign_headers(self, headers, host=None, method=None, path=None,
-            http_version='1.1'):
+    def sign(self, headers, host=None, method=None, path=None):
         """
         Add Signature Authorization header to case-insensitive header dict.
 
         headers is a case-insensitive dict of mutable headers.
         host is a override for the 'host' header (defaults to value in headers).
-        method is the HTTP method (used for 'request-line').
-        path is the HTTP path (used for 'request-line').
-        http_version is the HTTP version (used for 'request-line').
+        method is the HTTP method (used for '(request-line)').
+        path is the HTTP path (used for '(request-line)').
         """
         headers = CaseInsensitiveDict(headers)
-        if 'date' not in headers:
-            now = datetime.now()
-            stamp = mktime(now.timetuple())
-            headers['date'] = format_date_time(stamp)
+        
+        # AK: Possible problem here if the client and server's dates are off
+        #     by even one second, this will fail miserably.  This is also not
+        #     in the spec.  Should probably be removed.
+        # if 'date' not in headers:
+        #     now = datetime.now()
+        #     stamp = mktime(now.timetuple())
+        #     headers['date'] = format_date_time(stamp)
+        
         required_headers = self.headers or ['date']
         signable_list = []
         for h in required_headers:
-            if h == 'request-line':
+            if h == '(request-line)':
                 if not method or not path:
-                    raise Exception('method and path arguments required when using "request-line"')
+                    raise Exception('method and path arguments required when using "(request-line)"')
+                signable_list.append('%s %s' % (method.lower(), path))
 
-                signable_list.append('%s %s HTTP/%s' %
-                        (method.upper(), path, http_version))
             elif h == 'host':
                 # 'host' special case due to requests lib restrictions
                 # 'host' is not available when adding auth so must use a param
@@ -180,8 +186,9 @@ class HeaderSigner(Signer):
                     raise Exception('missing required header "%s"' % (h))
 
                 signable_list.append('%s: %s' % (h.lower(), headers[h]))
-        signable = '\n'.join(signable_list)
-        signature = self.sign(signable)
-        headers['Authorization'] = self.signature_template % signature
-        return headers
 
+        signable = '\n'.join(signable_list)
+        signature = self._sign(signable)
+        headers['Authorization'] = self.signature_template % signature
+
+        return headers

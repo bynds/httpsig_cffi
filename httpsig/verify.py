@@ -5,6 +5,7 @@ from Crypto.Hash import SHA256, SHA, SHA512, HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from base64 import b64decode
+from urllib2 import parse_http_list
 
 from .utils import sig, is_rsa, CaseInsensitiveDict
 
@@ -28,7 +29,7 @@ class Verifier(object):
         return RSA.importKey(key)
 
 
-    def verify(self, data, signature):
+    def _verify(self, data, signature):
         """
         Checks data against the public key
         """
@@ -47,14 +48,12 @@ class HeaderVerifier(Verifier):
     """
     Verifies an HTTP signature from given headers.
     """
-    def __init__(self, headers, required_headers=None, method=None, path=None,
-                 host=None, http_version='1.1'):
+    def __init__(self, headers, required_headers=None, method=None, path=None, host=None):
 
         required_headers = required_headers or ['date']
         self.auth_dict = self.parse_auth(headers['authorization'])
         self.headers = CaseInsensitiveDict(headers)
         self.required_headers = [s.lower() for s in required_headers]
-        self.http_version = http_version
         self.method = method
         self.path = path
         self.host = host
@@ -62,15 +61,22 @@ class HeaderVerifier(Verifier):
                                              hash_algorithm="sha256") # should get hash algorithm from request...
 
     def parse_auth(self, auth):
-        """Basic Authorization header parsing."""
+        """
+        Basic Authorization header parsing.
+        AK: Fails if there is a comma inside a quoted string. Consider urllib2.parse_http_list.
+        """
         # split 'Signature kvpairs'
         s, param_str = auth.split(' ', 1)
+        
         # split k1="v1",k2="v2",...
         param_list = param_str.split(',')
+        
         # convert into [(k1,"v1"), (k2, "v2"), ...]
         param_pairs = [p.split('=', 1) for p in param_list]
+        
         # convert into {k1:v1, k2:v2, ...}
         param_dict = {k: v.strip('"') for k, v in param_pairs}
+        
         return param_dict
 
 
@@ -87,12 +93,12 @@ class HeaderVerifier(Verifier):
 
         signable_list = []
         for h in auth_headers:
-            if h == 'request-line':
+            if h == '(request-line)':
                 if not self.method or not self.path:
-                    raise Exception('method and path arguments required when using "request-line"')
+                    raise Exception('method and path arguments required when using "(request-line)"')
 
-                signable_list.append('%s %s HTTP/%s' %
-                        (self.method.upper(), self.path, self.http_version))
+                signable_list.append('%s %s' % (self.method.upper(), self.path))
+            
             elif h == 'host':
                 # 'host' special case due to requests lib restrictions
                 # 'host' is not available when adding auth so must use a param
@@ -113,8 +119,8 @@ class HeaderVerifier(Verifier):
         signable = '\n'.join(signable_list)
         return signable
 
-    def verify_headers(self):
+    def verify(self):
         signing_str = self.get_signable()
         # self.auth_dict['keyId']
         # self.auth_dict['signature']
-        return self.verify(signing_str, self.auth_dict['signature'])
+        return self._verify(signing_str, self.auth_dict['signature'])

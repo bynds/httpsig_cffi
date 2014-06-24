@@ -14,7 +14,7 @@ class HTTPSignatureAuth(AuthBase):
     algorithm is one of the six specified algorithms
     headers is a list of http headers to be included in the signing string, defaulting to "Date" alone.
     '''
-    def __init__(self, key_id='', secret='', algorithm='rsa-sha256',
+    def __init__(self, key_id='', secret='', algorithm='hmac-sha256',
             headers=None, allow_agent=False):
         headers = headers or []
         self.header_signer = HeaderSigner(key_id=key_id, secret=secret,
@@ -22,13 +22,12 @@ class HTTPSignatureAuth(AuthBase):
         self.uses_host = 'host' in [h.lower() for h in headers]
 
     def __call__(self, r):
-        headers = self.header_signer.sign_headers(
+        headers = self.header_signer.sign(
                 r.headers,
                 # 'Host' header unavailable in request object at this point
                 # if 'host' header is needed, extract it from the url
                 host=urlparse(r.url).netloc if self.uses_host else None,
                 method=r.method,
-                path=r.path_url,
-                http_version='1.1')
+                path=r.path_url)
         r.headers.update(headers)
         return r

@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import json
 import unittest
 
-from http_signature.sign import HeaderSigner
+from httpsig.sign import HeaderSigner
 
 
 class TestSign(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestSign(unittest.TestCase):
     def test_date_added(self):
         hs = HeaderSigner(key_id='', secret=self.key)
         unsigned = {}
-        signed = hs.sign_headers(unsigned)
+        signed = hs.sign(unsigned)
         self.assertIn('Date', signed)
         self.assertIn('Authorization', signed)
 
@@ -39,7 +39,7 @@ class TestSign(unittest.TestCase):
         unsigned = {
             'Date': 'Thu, 05 Jan 2012 21:31:40 GMT'
         }
-        signed = hs.sign_headers(unsigned)
+        signed = hs.sign(unsigned)
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)
@@ -53,7 +53,7 @@ class TestSign(unittest.TestCase):
 
     def test_all(self):
         hs = HeaderSigner(key_id='Test', secret=self.key, headers=[
-            'request-line',
+            '(request-line)',
             'host',
             'date',
             'content-type',
@@ -67,7 +67,7 @@ class TestSign(unittest.TestCase):
             'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
             'Content-Length': '18',
         }
-        signed = hs.sign_headers(unsigned, method='POST',
+        signed = hs.sign(unsigned, method='POST',
                 path='/foo?param=value&pet=dog')
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
@@ -78,7 +78,7 @@ class TestSign(unittest.TestCase):
         self.assertIn('signature', params)
         self.assertEqual(params['keyId'], 'Test')
         self.assertEqual(params['algorithm'], 'rsa-sha256')
-        self.assertEqual(params['headers'], 'request-line host date content-type content-md5 content-length')
+        self.assertEqual(params['headers'], '(request-line) host date content-type content-md5 content-length')
         self.assertEqual(params['signature'], 'H/AaTDkJvLELy4i1RujnKlS6dm8QWiJvEpn9cKRMi49kKF+mohZ15z1r+mF+XiKS5kOOscyS83olfBtsVhYjPg2Ei3/D9D4Mvb7bFm9IaLJgYTFFuQCghrKQQFPiqJN320emjHxFowpIm1BkstnEU7lktH/XdXVBo8a6Uteiztw=')
 
 if __name__ == '__main__':

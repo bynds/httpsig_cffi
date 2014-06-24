@@ -1,7 +1,12 @@
 Changes
 -------
 
-0.2.0 ()
+0.2.0-AK (2014-Jun-23)
+~~~~~~~~~~~~~~~~~~~~~~
+* Removed HTTP version from request-line, per spec (breaks backwards compatability).
+* Removed auto-generation of missing Date header (ensures client compatability).
+
+0.2.0 (unreleased)
 ~~~~~~~~
 
 * Update to newer spec (incompatible with prior version).
