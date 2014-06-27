@@ -27,16 +27,16 @@ Usage
 
 for simple raw signing::
 
-    import http_signature
+    import httpsig
     
-    sig_maker = http_signature.Signer(secret='test.pem', algorithm='rsa-sha256')
+    sig_maker = httpsig.Signer(secret='test.pem', algorithm='rsa-sha256')
     sig_maker.sign('hello world!')
 
 for use with requests::
 
     import json
     import requests
-    from http_signature.requests_auth import HTTPSignatureAuth
+    from httpsig.requests_auth import HTTPSignatureAuth
     
     auth = HTTPSignatureAuth(key_id='Test', secret='test.pem')
     z = requests.get('https://api.joyentcloud.com/my/packages/Small+1GB', 
@@ -47,7 +47,7 @@ Class initialization parameters
 
 ::
 
-    http_signature.Signer(secret='', algorithm='rsa-sha256', allow_agent=False)
+    httpsig.Signer(secret='', algorithm='rsa-sha256', allow_agent=False)
 
 ``secret``, in the case of an rsa signature, is a path to a private RSA pem file. In the case of an hmac, it is a secret password.  
 ``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``, 
@@ -56,7 +56,7 @@ Class initialization parameters
 
 ::
 
-    http_signature.requests_auth.HTTPSignatureAuth(key_id='', secret='', algorithm='rsa-sha256', headers=None, allow_agent=False)
+    httpsig.requests_auth.HTTPSignatureAuth(key_id='', secret='', algorithm='rsa-sha256', headers=None, allow_agent=False)
 
 ``key_id`` is the label by which the server system knows your RSA signature or password.  
 ``headers`` is the list of HTTP headers that are concatenated and used as signing objects. By default it is the specification's minimum, the ``Date`` HTTP header.  

@@ -154,22 +154,14 @@ class HeaderSigner(Signer):
         path is the HTTP path (used for '(request-line)').
         """
         headers = CaseInsensitiveDict(headers)
-        
-        # AK: Possible problem here if the client and server's dates are off
-        #     by even one second, this will fail miserably.  This is also not
-        #     in the spec.  Should probably be removed.
-        # if 'date' not in headers:
-        #     now = datetime.now()
-        #     stamp = mktime(now.timetuple())
-        #     headers['date'] = format_date_time(stamp)
-        
+                
         required_headers = self.headers or ['date']
         signable_list = []
         for h in required_headers:
             if h == '(request-line)':
                 if not method or not path:
                     raise Exception('method and path arguments required when using "(request-line)"')
-                signable_list.append('%s %s' % (method.lower(), path))
+                signable_list.append('%s: %s %s' % (h, method.lower(), path))
 
             elif h == 'host':
                 # 'host' special case due to requests lib restrictions
