@@ -25,14 +25,8 @@ class TestSign(unittest.TestCase):
         return param_dict
 
     def setUp(self):
-        self.key = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
-
-    def test_date_added(self):
-        hs = HeaderSigner(key_id='', secret=self.key)
-        unsigned = {}
-        signed = hs.sign(unsigned)
-        self.assertIn('Date', signed)
-        self.assertIn('Authorization', signed)
+        self.key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
+        self.key = open(self.key_path, 'r').read()
 
     def test_default(self):
         hs = HeaderSigner(key_id='Test', secret=self.key)
@@ -67,8 +61,8 @@ class TestSign(unittest.TestCase):
             'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
             'Content-Length': '18',
         }
-        signed = hs.sign(unsigned, method='POST',
-                path='/foo?param=value&pet=dog')
+        signed = hs.sign(unsigned, method='POST', path='/foo?param=value&pet=dog')
+        
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)
@@ -79,7 +73,4 @@ class TestSign(unittest.TestCase):
         self.assertEqual(params['keyId'], 'Test')
         self.assertEqual(params['algorithm'], 'rsa-sha256')
         self.assertEqual(params['headers'], '(request-line) host date content-type content-md5 content-length')
-        self.assertEqual(params['signature'], 'H/AaTDkJvLELy4i1RujnKlS6dm8QWiJvEpn9cKRMi49kKF+mohZ15z1r+mF+XiKS5kOOscyS83olfBtsVhYjPg2Ei3/D9D4Mvb7bFm9IaLJgYTFFuQCghrKQQFPiqJN320emjHxFowpIm1BkstnEU7lktH/XdXVBo8a6Uteiztw=')
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertEqual(params['signature'], 'vYJio4AxbN38TKdzE1Qk/3qXhzTaBS7zUIPCqV+NsjLSf8ZK/19L9ErTz8FYBAW8Gko2dEaU70McrIO33k0PUlPsWvbGn/IhnU14rvSPF/F+AnFVFeA9ivvvyVZQYYYp17fnNfiCzHrvUn+VnqMhRKA15Nr8KKwt9Eqi36wQ8Vg=')

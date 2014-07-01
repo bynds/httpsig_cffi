@@ -1,23 +1,20 @@
-from datetime import datetime
-from getpass import getpass
-from os.path import expanduser
-from time import mktime
-from wsgiref.handlers import format_date_time
 import base64
 
-from Crypto.Hash import SHA256, SHA, SHA512, HMAC
+from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
-from .utils import sig, is_rsa, CaseInsensitiveDict
+from .utils import generate_message, sig, is_rsa, CaseInsensitiveDict, ALGORITHMS, HASHES, HttpSigException
 
-ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
-HASHES = {'sha1':   SHA,
-          'sha256': SHA256,
-          'sha512': SHA512}
 
 class Signer(object):
-    def __init__(self, secret='~/.ssh/id_rsa', algorithm='rsa-sha256'):
+    """
+    When using an RSA algo, the secret is a PEM-encoded private key.
+    When using an HMAC algo, the secret is the HMAC signing secret.
+    
+    Password-protected keyfiles are not supported.
+    """
+    def __init__(self, secret, algorithm='rsa-sha256'):
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         self._rsa = False
         self._hash = None
@@ -33,19 +30,14 @@ class Signer(object):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
     def _get_key(self, secret):
-        if (secret.startswith('-----BEGIN RSA PRIVATE KEY-----') or
-            secret.startswith('-----BEGIN PRIVATE KEY-----')):
-            # string with PEM encoded key data
-            k = secret
-        else:
-            # file with key data
-            with open(expanduser(secret)) as fh:
-                k = fh.read()
+        # if not (secret.startswith('-----BEGIN RSA PRIVATE KEY-----') or secret.startswith('-----BEGIN PRIVATE KEY-----')):
+        #     raise HttpSigException("Invalid PEM key")
+        
         try:
-            rsa_key = RSA.importKey(k)
+            rsa_key = RSA.importKey(secret)
         except ValueError:
-            pw = getpass('RSA SSH Key Password: ')
-            rsa_key = RSA.importKey(k, pw)
+            raise HttpSigException("Invalid key.")
+        
         return PKCS1_v1_5.new(rsa_key)
 
     def _sign_rsa(self, sign_string):
@@ -58,7 +50,6 @@ class Signer(object):
         hmac.update(sign_string)
         return hmac.digest()
 
-
     def _sign(self, sign_string):
         data = None
         if self._rsa:
@@ -66,40 +57,7 @@ class Signer(object):
         elif self._hash:
             data = self._sign_hmac(sign_string)
         if not data:
-            raise SystemError('No valid encryption: try allow_agent=False ?')
-        return base64.b64encode(data)
-
-
-class AgentSigner(Signer):
-    def __init__(self, secret='~/.ssh/id_rsa', algorithm='rsa-sha256'):
-        super(AgentSigner, self).__init__()
-        self._agent_key = False
-
-    def _get_key(self):
-        try:
-            import paramiko as ssh
-        except ImportError:
-            import ssh
-        keys = ssh.Agent().get_keys()
-        self._keys = filter(is_rsa, keys)
-        if self._keys:
-            self._agent_key = self._keys[0]
-            self._keys = self._keys[1:]
-            self.sign_algorithm, self.hash_algorithm = ('rsa', 'sha1')
-
-    def swap_keys(self):
-        if self._keys:
-            self._agent_key = self._keys[0]
-            self._keys = self._keys[1:]
-        else:
-            self._agent_key = None
-
-    def sign_agent(self, sign_string):
-        data = self._agent_key.sign_ssh_data(None, sign_string)
-        return sig(data)
-
-    def sign(self, sign_string):
-        data = self.sign_agent(sign_string)
+            raise SystemError('No valid encryptor found.')
         return base64.b64encode(data)
 
 
@@ -111,10 +69,9 @@ class HeaderSigner(Signer):
     key_id is the mandatory label indicating to the server which secret to use
     secret is the filename of a pem file in the case of rsa, a password string in the case of an hmac algorithm
     algorithm is one of the six specified algorithms
-    headers is a list of http headers to be included in the signing string, defaulting to "Date" alone.
+    headers is a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id='', secret='~/.ssh/id_rsa', algorithm='rsa-sha256', headers=None):
-        
+    def __init__(self, key_id, secret, algorithm='rsa-sha256', headers=None):
         #PyCrypto wants strings, not unicode. We're not so demanding as an API.
         key_id = str(key_id)
         secret = str(secret)
@@ -150,37 +107,15 @@ class HeaderSigner(Signer):
 
         headers is a case-insensitive dict of mutable headers.
         host is a override for the 'host' header (defaults to value in headers).
-        method is the HTTP method (used for '(request-line)').
-        path is the HTTP path (used for '(request-line)').
+        method is the HTTP method (required when using '(request-line)').
+        path is the HTTP path (required when using '(request-line)').
         """
         headers = CaseInsensitiveDict(headers)
-                
         required_headers = self.headers or ['date']
-        signable_list = []
-        for h in required_headers:
-            if h == '(request-line)':
-                if not method or not path:
-                    raise Exception('method and path arguments required when using "(request-line)"')
-                signable_list.append('%s: %s %s' % (h, method.lower(), path))
-
-            elif h == 'host':
-                # 'host' special case due to requests lib restrictions
-                # 'host' is not available when adding auth so must use a param
-                # if no param used, defaults back to the 'host' header
-                if not host:
-                    if 'host' in headers:
-                        host = headers[h]
-                    else:
-                        raise Exception('missing required header "%s"' % (h))
-                signable_list.append('%s: %s' % (h.lower(), host))
-            else:
-                if h not in headers:
-                    raise Exception('missing required header "%s"' % (h))
-
-                signable_list.append('%s: %s' % (h.lower(), headers[h]))
-
-        signable = '\n'.join(signable_list)
+        signable = generate_message(required_headers, headers, host, method, path)
+        
         signature = self._sign(signable)
         headers['Authorization'] = self.signature_template % signature
-
+        
         return headers
+

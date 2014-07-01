@@ -10,7 +10,7 @@ httpsig/requests_auth.py
 httpsig/sign.py
 httpsig/utils.py
 httpsig/verify.py
-tests/__init__.py
-tests/test_signature.py
-tests/test_utils.py
-tests/test_verify.py
+httpsig/tests/__init__.py
+httpsig/tests/test_signature.py
+httpsig/tests/test_utils.py
+httpsig/tests/test_verify.py

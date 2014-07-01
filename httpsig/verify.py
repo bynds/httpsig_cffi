@@ -1,54 +1,53 @@
 """
 Module to assist in verifying a signed header.
 """
-from Crypto.Hash import SHA256, SHA, SHA512, HMAC
+from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from base64 import b64decode
-from urllib2 import parse_http_list
 
-from .utils import sig, is_rsa, CaseInsensitiveDict
+from .sign import Signer
+from .utils import generate_message, sig, is_rsa, CaseInsensitiveDict, ALGORITHMS, HASHES, HttpSigException
 
-ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
-HASHES = {'sha1':   SHA,
-          'sha256': SHA256,
-          'sha512': SHA512}
 
-class Verifier(object):
+class Verifier(Signer):
     """
-    Verifies signed text against a public key.
+    Verifies signed text against a secret.
+    For HMAC, the secret is the shared secret.
+    For RSA, the secret is the PUBLIC key.
     """
-    def __init__(self, key_id='~/.ssh/id_rsa.pub', hash_algorithm="sha256"):
-        self.rsa_key = self._get_key(key_id)
-        self.signer = PKCS1_v1_5.new(self.rsa_key)
-        self.hash_algorithm = HASHES[hash_algorithm]
-
-    def _get_key(self, key_id):
-        with open(key_id, 'r') as k:
-            key = k.read()
-        return RSA.importKey(key)
-
-
     def _verify(self, data, signature):
         """
-        Checks data against the public key
+        Verifies the data matches a signed version with the given signature.
+        `data` is the message to verify
+        `signature` is a base64-encoded signature to verify against `data`
         """
-        digest = SHA256.new()
-        # might need to b64 encode this
-        digest.update(data)
-        if self.signer.verify(digest, b64decode(signature)):
-            return True
-        elif self.signer.verify(digest, signature):
-            return True
+        
+        if self.sign_algorithm == 'rsa':
+            # Verify RSA
+            h = self._hash.new()
+            h.update(data)
+            
+            if self._rsa.verify(h, b64decode(signature)):
+                return True
+            else:
+                return False
+        
+        elif self.sign_algorithm == 'hmac':
+            # Verify HMAC
+            h = self._sign_hmac(data)
+            return (h == b64decode(signature))
+        
         else:
-            return False
+            # Unknown algo
+            raise HttpSigException("Unknown signing algorithm.")
 
 
 class HeaderVerifier(Verifier):
     """
     Verifies an HTTP signature from given headers.
     """
-    def __init__(self, headers, required_headers=None, method=None, path=None, host=None):
+    def __init__(self, headers, secret, required_headers=None, method=None, path=None, host=None):
 
         required_headers = required_headers or ['date']
         self.auth_dict = self.parse_auth(headers['authorization'])
@@ -57,13 +56,13 @@ class HeaderVerifier(Verifier):
         self.method = method
         self.path = path
         self.host = host
-        super(HeaderVerifier, self).__init__(key_id=self.auth_dict['keyId'],
-                                             hash_algorithm="sha256") # should get hash algorithm from request...
+        
+        super(HeaderVerifier, self).__init__(secret, algorithm=self.auth_dict['algorithm'])
 
     def parse_auth(self, auth):
         """
         Basic Authorization header parsing.
-        AK: Fails if there is a comma inside a quoted string. Consider urllib2.parse_http_list.
+        FIXME: Fails if there is a comma inside a quoted string.
         """
         # split 'Signature kvpairs'
         s, param_str = auth.split(' ', 1)
@@ -79,7 +78,6 @@ class HeaderVerifier(Verifier):
         
         return param_dict
 
-
     def get_signable(self):
         """Get the string that is signed"""
         header_dict = self.parse_auth(self.headers['authorization'])
@@ -87,40 +85,14 @@ class HeaderVerifier(Verifier):
             auth_headers = self.auth_dict.get('headers').split(' ')
         else:
             auth_headers = ['date']
-
+        
         if len(set(self.required_headers) - set(auth_headers)) > 0:
             raise Exception('{} is a required header(s)'.format(', '.join(set(self.required_headers)-set(auth_headers))))
+        
+        signable = generate_message(auth_headers, self.headers, self.host, self.method, self.path)
 
-        signable_list = []
-        for h in auth_headers:
-            if h == '(request-line)':
-                if not self.method or not self.path:
-                    raise Exception('method and path arguments required when using "(request-line)"')
-
-                signable_list.append('%s %s' % (self.method.upper(), self.path))
-            
-            elif h == 'host':
-                # 'host' special case due to requests lib restrictions
-                # 'host' is not available when adding auth so must use a param
-                # if no param used, defaults back to the 'host' header
-                if not self.headers.get('host') :
-                    if 'host' in header_dict:
-                        host = self.headers[h]
-                    elif self.host:
-                       signable_list.append('%s: %s' % (h.lower(), self.host))
-                    else:
-                        raise Exception('missing required header "%s"' % (h))
-                signable_list.append('%s: %s' % (h.lower(), self.headers[h]))
-            else:
-                if h not in self.headers:
-                    raise Exception('missing required header "%s"' % (h))
-
-                signable_list.append('%s: %s' % (h.lower(), self.headers[h]))
-        signable = '\n'.join(signable_list)
         return signable
 
     def verify(self):
         signing_str = self.get_signable()
-        # self.auth_dict['keyId']
-        # self.auth_dict['signature']
         return self._verify(signing_str, self.auth_dict['signature'])
