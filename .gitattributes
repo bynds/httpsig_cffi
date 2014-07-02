@@ -1,1 +1,2 @@
 http_signature/_version.py export-subst
+httpsig/_version.py export-subst

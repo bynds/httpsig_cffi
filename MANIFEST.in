@@ -1,3 +1,5 @@
 include README.rst
 include CHANGES.rst
 include versioneer.py
+include httpsig/_version.py
+include httpsig/tests/*.pem
