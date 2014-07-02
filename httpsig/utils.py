@@ -71,14 +71,16 @@ def parse_authorization_header(header):
             fields = parse_http_list(auth_value)
         
             for item in fields:
-                # Split on the first '=' only.
-                key, value = item.split('=', 1)
+                # Only include keypairs.
+                if '=' in item:
+                    # Split on the first '=' only.
+                    key, value = item.split('=', 1)
             
-                # Unquote values, if quoted.
-                if value[0] == '"':
-                    value = value[1:-1]
+                    # Unquote values, if quoted.
+                    if value[0] == '"':
+                        value = value[1:-1]
                 
-                values[key] = value
+                    values[key] = value
     
     # ("Signature", {"headers": "date", "algorithm": "hmac-sha256", ... })
     return (auth[0], CaseInsensitiveDict(values))

@@ -47,6 +47,16 @@ class HeaderVerifier(Verifier):
     Verifies an HTTP signature from given headers.
     """
     def __init__(self, headers, secret, required_headers=None, method=None, path=None, host=None):
+        """
+        Instantiate a HeaderVerifier object.
+        
+        :param headers:             A dictionary of headers from the HTTP request.
+        :param secret:              The HMAC secret or RSA *public* key.
+        :param required_headers:    Optional. A list of headers required to be present to validate, even if the signature is otherwise valid.  Defaults to ['date'].
+        :param method:              Optional. The HTTP method used in the request (eg. "GET"). Required for the '(request-line)' header.
+        :param path:                Optional. The HTTP path requested, exactly as sent (including query arguments and fragments). Required for the '(request-line)' header.
+        :param host:                Optional. The value to use for the Host header, if not supplied in :param:headers.
+        """
         required_headers = required_headers or ['date']
         
         auth = parse_authorization_header(headers['authorization'])
@@ -64,6 +74,12 @@ class HeaderVerifier(Verifier):
         super(HeaderVerifier, self).__init__(secret, algorithm=self.auth_dict['algorithm'])
 
     def verify(self):
+        """
+        Verify the headers based on the arguments passed at creation and current properties.
+        
+        Raises an Exception if a required header (:param:required_headers) is not found in the signature.
+        Returns True or False.
+        """
         auth_headers = self.auth_dict.get('headers', 'date').split(' ')
         
         if len(set(self.required_headers) - set(auth_headers)) > 0:
