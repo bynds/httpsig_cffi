@@ -58,7 +58,10 @@ def generate_message(required_headers, headers, host=None, method=None, path=Non
 
 
 def parse_authorization_header(header):
-    auth = header.split(' ', 1)
+    if not isinstance(header, six.string_types):
+        header = header.decode("ascii") #HTTP headers cannot be Unicode.
+    
+    auth = header.split(" ", 1)
     if len(auth) > 2:
         raise ValueError('Invalid authorization header. (eg. Method key1=value1,key2="value, \"2\"")')
     
