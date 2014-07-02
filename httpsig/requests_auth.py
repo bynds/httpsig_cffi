@@ -1,5 +1,10 @@
 from requests.auth import AuthBase
-from urlparse import urlparse
+try:
+    # Python 3
+    from urllib.parse import urlparse
+except ImportError:
+    # Python 2
+    from urlparse import urlparse
 
 from .sign import HeaderSigner
 

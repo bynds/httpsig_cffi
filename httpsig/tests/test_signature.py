@@ -7,26 +7,14 @@ import json
 import unittest
 
 from httpsig.sign import HeaderSigner
+from httpsig.utils import parse_authorization_header
 
 
 class TestSign(unittest.TestCase):
 
-    def _parse_auth(self, auth):
-        """Basic Authorization header parsing."""
-        # split 'Signature kvpairs'
-        s, param_str = auth.split(' ', 1)
-        self.assertEqual(s, 'Signature')
-        # split k1="v1",k2="v2",...
-        param_list = param_str.split(',')
-        # convert into [(k1,"v1"), (k2, "v2"), ...]
-        param_pairs = [p.split('=', 1) for p in param_list]
-        # convert into {k1:v1, k2:v2, ...}
-        param_dict = {k: v.strip('"') for k, v in param_pairs}
-        return param_dict
-
     def setUp(self):
         self.key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
-        self.key = open(self.key_path, 'r').read()
+        self.key = open(self.key_path, 'rb').read()
 
     def test_default(self):
         hs = HeaderSigner(key_id='Test', secret=self.key)
@@ -37,7 +25,8 @@ class TestSign(unittest.TestCase):
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)
-        params = self._parse_auth(signed['Authorization'])
+        auth = parse_authorization_header(signed['authorization'])
+        params = auth[1]
         self.assertIn('keyId', params)
         self.assertIn('algorithm', params)
         self.assertIn('signature', params)
@@ -66,7 +55,8 @@ class TestSign(unittest.TestCase):
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)
-        params = self._parse_auth(signed['Authorization'])
+        auth = parse_authorization_header(signed['authorization'])
+        params = auth[1]
         self.assertIn('keyId', params)
         self.assertIn('algorithm', params)
         self.assertIn('signature', params)

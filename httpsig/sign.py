@@ -1,10 +1,11 @@
 import base64
+import six
 
 from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
-from .utils import generate_message, sig, is_rsa, CaseInsensitiveDict, ALGORITHMS, HASHES, HttpSigException
+from .utils import *
 
 
 class Signer(object):
@@ -16,12 +17,20 @@ class Signer(object):
     """
     def __init__(self, secret, algorithm='rsa-sha256'):
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-        self._rsa = False
+        if isinstance(secret, six.string_types): secret = secret.encode("ascii")
+        
+        self._rsa = None
         self._hash = None
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
+        
         if self.sign_algorithm == 'rsa':
-            self._rsa = self._get_key(secret)
-            self._hash = HASHES[self.hash_algorithm]
+            try:
+                rsa_key = RSA.importKey(secret)
+                self._rsa = PKCS1_v1_5.new(rsa_key)
+                self._hash = HASHES[self.hash_algorithm]
+            except ValueError:
+                raise HttpSigException("Invalid key.")
+            
         elif self.sign_algorithm == 'hmac':
             self._hash = HMAC.new(secret, digestmod=HASHES[self.hash_algorithm])
 
@@ -29,36 +38,28 @@ class Signer(object):
     def algorithm(self):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
-    def _get_key(self, secret):
-        # if not (secret.startswith('-----BEGIN RSA PRIVATE KEY-----') or secret.startswith('-----BEGIN PRIVATE KEY-----')):
-        #     raise HttpSigException("Invalid PEM key")
-        
-        try:
-            rsa_key = RSA.importKey(secret)
-        except ValueError:
-            raise HttpSigException("Invalid key.")
-        
-        return PKCS1_v1_5.new(rsa_key)
-
-    def _sign_rsa(self, sign_string):
+    def _sign_rsa(self, data):
+        if isinstance(data, six.string_types): data = data.encode("ascii")
         h = self._hash.new()
-        h.update(sign_string)
+        h.update(data)
         return self._rsa.sign(h)
 
-    def _sign_hmac(self, sign_string):
+    def _sign_hmac(self, data):
+        if isinstance(data, six.string_types): data = data.encode("ascii")
         hmac = self._hash.copy()
-        hmac.update(sign_string)
+        hmac.update(data)
         return hmac.digest()
 
-    def _sign(self, sign_string):
-        data = None
+    def _sign(self, data):
+        if isinstance(data, six.string_types): data = data.encode("ascii")
+        signed = None
         if self._rsa:
-            data = self._sign_rsa(sign_string)
+            signed = self._sign_rsa(data)
         elif self._hash:
-            data = self._sign_hmac(sign_string)
-        if not data:
+            signed = self._sign_hmac(data)
+        if not signed:
             raise SystemError('No valid encryptor found.')
-        return base64.b64encode(data)
+        return base64.b64encode(signed).decode("ascii")
 
 
 class HeaderSigner(Signer):
@@ -72,34 +73,9 @@ class HeaderSigner(Signer):
     headers is a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
     def __init__(self, key_id, secret, algorithm='rsa-sha256', headers=None):
-        #PyCrypto wants strings, not unicode. We're not so demanding as an API.
-        key_id = str(key_id)
-        secret = str(secret)
-        
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
-        self.headers = headers
-        self.signature_template = self.build_signature_template(key_id, algorithm, headers)
-
-    def build_signature_template(self, key_id, algorithm, headers):
-        """
-        Build the Signature template for use with the Authorization header.
-
-        key_id is the mandatory label indicating to the server which secret to use
-        algorithm is one of the six specified algorithms
-        headers is a list of http headers to be included in the signing string.
-
-        The signature must be interpolated into the template to get the final Authorization header value.
-        """
-        param_map = {'keyId': key_id,
-                     'algorithm': algorithm,
-                     'signature': '%s'}
-        if headers:
-            headers = [h.lower() for h in headers]
-            param_map['headers'] = ' '.join(headers)
-        kv = map('{0[0]}="{0[1]}"'.format, param_map.items())
-        kv_string = ','.join(kv)
-        sig_string = 'Signature {0}'.format(kv_string)
-        return sig_string
+        self.headers = headers or ['date']
+        self.signature_template = build_signature_template(key_id, algorithm, headers)
 
     def sign(self, headers, host=None, method=None, path=None):
         """
@@ -115,7 +91,7 @@ class HeaderSigner(Signer):
         signable = generate_message(required_headers, headers, host, method, path)
         
         signature = self._sign(signable)
-        headers['Authorization'] = self.signature_template % signature
+        headers['authorization'] = self.signature_template % signature
         
         return headers
 
