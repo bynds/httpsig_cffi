@@ -1,7 +1,15 @@
 httpsig
 =======
 
-Sign HTTP requests with secure signatures. See the original project_, original Python module_, original spec_, and IETF draft_ for details.
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=master
+    :target: https://travis-ci.org/ahknight/httpsig
+    
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
+    :target: https://travis-ci.org/ahknight/httpsig
+
+Sign HTTP requests with secure signatures according to the current IETF HTTP Signatures draft_ specification.  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+
+See the original project_, original Python module_, original spec_, and current IETF draft_ for more details on the signing scheme.
 
 .. _project: https://github.com/joyent/node-http-signature
 .. _module: https://github.com/zzsnzmn/py-http-signature
@@ -11,6 +19,7 @@ Sign HTTP requests with secure signatures. See the original project_, original P
 Requirements
 ------------
 
+* Python 2.7, 3.2, 3.3, 3.4
 * PyCrypto_
 
 Optional:
@@ -23,22 +32,40 @@ Optional:
 Usage
 -----
 
-for simple raw signing::
+Real documentation is forthcoming, but for now this should get you started.
+
+For simple raw signing:
+
+.. code:: python
 
     import httpsig
     
-    secret = open('rsa_private.pem', 'r').read()
+    secret = open('rsa_private.pem', 'rb').read()
     
     sig_maker = httpsig.Signer(secret=secret, algorithm='rsa-sha256')
     sig_maker.sign('hello world!')
 
-for use with requests::
+For general use with web frameworks:
+    
+.. code:: python
+
+    import httpsig
+    
+    key_id = "Some Key ID"
+    secret = b'some big secret'
+    
+    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hmac-sha256", headers=['(request-line)', 'host', 'date'])
+    signed_headers_dict = hs.sign({"Date": "Tue, 01 Jan 2014 01:01:01 GMT", "Host": "example.com"}, method="GET", path="/api/1/object/1")
+
+For use with requests:
+
+.. code:: python
 
     import json
     import requests
     from httpsig.requests_auth import HTTPSignatureAuth
     
-    secret = open('rsa_private.pem', 'r').read()
+    secret = open('rsa_private.pem', 'rb').read()
     
     auth = HTTPSignatureAuth(key_id='Test', secret=secret)
     z = requests.get('https://api.example.com/path/to/endpoint', 
@@ -47,7 +74,9 @@ for use with requests::
 Class initialization parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+Note that keys and secrets should be bytes objects.  At attempt will be made to convert them, but if that fails then exceptions will be thrown.
+
+.. code:: python
 
     httpsig.Signer(secret, algorithm='rsa-sha256')
 
@@ -55,7 +84,8 @@ Class initialization parameters
 ``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``, 
 ``hmac-sha512``.
 
-::
+
+.. code:: python
 
     httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
 
@@ -70,7 +100,11 @@ To run tests::
 
     python setup.py test
 
+or::
+
+    tox
+
 License
 -------
 
-MIT
+Both this module and the original module_ are licensed under the MIT license.

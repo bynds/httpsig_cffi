@@ -1,7 +1,14 @@
 httpsig Changes
 ---------------
 
-1.0b2 (2014-Jul-01)
+1.0.1 (2014-Jul-02)
+~~~~~~~~~~~~~~~~~~~
+
+* Python 3 support (2.7 + 3.2-3.4)
+* Updated tox and Travis CI configs to test the supported Python versions.
+* Updated README.
+
+1.0.0 (2014-Jul-01)
 ~~~~~~~~~~~~~~~~~~~
 * Written against http://tools.ietf.org/html/draft-cavage-http-signatures-02
 * Added "setup.py test" and tox support.
