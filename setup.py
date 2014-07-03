@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from setuptools import setup, find_packages
 
 # versioneer config
@@ -11,7 +11,7 @@ versioneer.parentdir_prefix = 'httpsig-'    # dirname like 'myproject-1.2.0'
 # create long description
 with open('README.rst') as file:
     long_description = file.read()
-with open('CHANGES.rst') as file:
+with open('CHANGELOG.rst') as file:
     long_description += '\n\n' + file.read()
 
 setup(
