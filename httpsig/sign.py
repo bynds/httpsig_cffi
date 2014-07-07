@@ -8,6 +8,9 @@ from Crypto.Signature import PKCS1_v1_5
 from .utils import *
 
 
+DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
+
+
 class Signer(object):
     """
     When using an RSA algo, the secret is a PEM-encoded private key.
@@ -15,7 +18,10 @@ class Signer(object):
     
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm='rsa-sha256'):
+    def __init__(self, secret, algorithm=None):
+        if algorithm is None:
+            algorithm = DEFAULT_SIGN_ALGORITHM
+        
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         if isinstance(secret, six.string_types): secret = secret.encode("ascii")
         
@@ -67,12 +73,15 @@ class HeaderSigner(Signer):
     Generic object that will sign headers as a dictionary using the http-signature scheme.
     https://github.com/joyent/node-http-signature/blob/master/http_signing.md
 
-    key_id is the mandatory label indicating to the server which secret to use
-    secret is the filename of a pem file in the case of rsa, a password string in the case of an hmac algorithm
-    algorithm is one of the six specified algorithms
-    headers is a list of http headers to be included in the signing string, defaulting to ['date'].
+    :arg key_id:    the mandatory label indicating to the server which secret to use
+    :arg secret:    a PEM-encoded RSA private key or an HMAC secret (must match the algorithm)
+    :arg algorithm: one of the six specified algorithms
+    :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm='rsa-sha256', headers=None):
+    def __init__(self, key_id, secret, algorithm=None, headers=None):
+        if algorithm is None:
+            algorithm = DEFAULT_SIGN_ALGORITHM
+        
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)

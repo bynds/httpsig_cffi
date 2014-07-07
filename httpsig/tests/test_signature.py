@@ -6,8 +6,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import json
 import unittest
 
-from httpsig.sign import HeaderSigner
+import httpsig.sign as sign
 from httpsig.utils import parse_authorization_header
+
+
+sign.DEFAULT_SIGN_ALGORITHM = "rsa-sha256"
 
 
 class TestSign(unittest.TestCase):
@@ -17,7 +20,7 @@ class TestSign(unittest.TestCase):
         self.key = open(self.key_path, 'rb').read()
 
     def test_default(self):
-        hs = HeaderSigner(key_id='Test', secret=self.key)
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key)
         unsigned = {
             'Date': 'Thu, 05 Jan 2012 21:31:40 GMT'
         }
@@ -35,7 +38,7 @@ class TestSign(unittest.TestCase):
         self.assertEqual(params['signature'], 'ATp0r26dbMIxOopqw0OfABDT7CKMIoENumuruOtarj8n/97Q3htHFYpH8yOSQk3Z5zh8UxUym6FYTb5+A0Nz3NRsXJibnYi7brE/4tx5But9kkFGzG+xpUmimN4c3TMN7OFH//+r8hBf7BT9/GmHDUVZT2JzWGLZES2xDOUuMtA=')
 
     def test_all(self):
-        hs = HeaderSigner(key_id='Test', secret=self.key, headers=[
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key, headers=[
             '(request-line)',
             'host',
             'date',
