@@ -78,7 +78,9 @@ def parse_authorization_header(header):
                 if '=' in item:
                     # Split on the first '=' only.
                     key, value = item.split('=', 1)
-            
+                    if not (len(key) and len(value)):
+                        continue
+                    
                     # Unquote values, if quoted.
                     if value[0] == '"':
                         value = value[1:-1]
