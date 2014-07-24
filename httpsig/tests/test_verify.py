@@ -60,7 +60,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
         METHOD = "POST"
         PATH = '/foo?param=value&pet=dog'
         hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
-            '(request-line)',
+            '(request-target)',
             'host',
             'date',
             'content-type',
@@ -87,7 +87,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
                           key_id="Test",
                           algorithm=self.algorithm,
                           headers=[
-                            '(request-line)',
+                            '(request-target)',
                             'host',
                             'date',
                             'content-type',
@@ -111,7 +111,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
         METHOD = "POST"
         PATH = '/foo?param=value&pet=dog'
         hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
-            '(request-line)',
+            '(request-target)',
             'host',
             'date',
             'content-type',
@@ -126,7 +126,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
             'Content-Length': '18',
         }
         signed = hs.sign(unsigned, method=METHOD, path=PATH)
-        hv = HeaderVerifier(headers=signed, secret=self.verify_secret, method=METHOD, path=PATH, required_headers=['date', '(request-line)'])
+        hv = HeaderVerifier(headers=signed, secret=self.verify_secret, method=METHOD, path=PATH, required_headers=['date', '(request-target)'])
         self.assertTrue(hv.verify())
 
 

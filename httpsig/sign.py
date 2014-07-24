@@ -92,8 +92,8 @@ class HeaderSigner(Signer):
 
         headers is a case-insensitive dict of mutable headers.
         host is a override for the 'host' header (defaults to value in headers).
-        method is the HTTP method (required when using '(request-line)').
-        path is the HTTP path (required when using '(request-line)').
+        method is the HTTP method (required when using '(request-target)').
+        path is the HTTP path (required when using '(request-target)').
         """
         headers = CaseInsensitiveDict(headers)
         required_headers = self.headers or ['date']

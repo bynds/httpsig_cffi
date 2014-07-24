@@ -1,6 +1,23 @@
 httpsig Changes
 ---------------
 
+1.1.0 (2014-Jul-24)
+-------------------
+
+* Changed "(request-line)" to "(request-target)" to comply with Draft 3.
+
+1.0.3 (2014-Jul-09)
+-------------------
+
+* Unified the default signing algo under one setting. Setting httpsig.sign.DEFAULT_SIGN_ALGORITHM changes it for all future instances.
+* Handle invalid params a little better.
+
+1.0.2 (2014-Jul-02)
+-------------------
+
+* Ensure we treat headers as ASCII strings.
+* Handle a case in the authorization header where there's garbage (non-keypairs) after the method name.
+
 1.0.1 (2014-Jul-02)
 ~~~~~~~~~~~~~~~~~~~
 

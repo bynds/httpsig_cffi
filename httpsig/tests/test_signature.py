@@ -39,7 +39,7 @@ class TestSign(unittest.TestCase):
 
     def test_all(self):
         hs = sign.HeaderSigner(key_id='Test', secret=self.key, headers=[
-            '(request-line)',
+            '(request-target)',
             'host',
             'date',
             'content-type',
@@ -65,5 +65,5 @@ class TestSign(unittest.TestCase):
         self.assertIn('signature', params)
         self.assertEqual(params['keyId'], 'Test')
         self.assertEqual(params['algorithm'], 'rsa-sha256')
-        self.assertEqual(params['headers'], '(request-line) host date content-type content-md5 content-length')
-        self.assertEqual(params['signature'], 'vYJio4AxbN38TKdzE1Qk/3qXhzTaBS7zUIPCqV+NsjLSf8ZK/19L9ErTz8FYBAW8Gko2dEaU70McrIO33k0PUlPsWvbGn/IhnU14rvSPF/F+AnFVFeA9ivvvyVZQYYYp17fnNfiCzHrvUn+VnqMhRKA15Nr8KKwt9Eqi36wQ8Vg=')
+        self.assertEqual(params['headers'], '(request-target) host date content-type content-md5 content-length')
+        self.assertEqual(params['signature'], 'G8/Uh6BBDaqldRi3VfFfklHSFoq8CMt5NUZiepq0q66e+fS3Up3BmXn0NbUnr3L1WgAAZGplifRAJqp2LgeZ5gXNk6UX9zV3hw5BERLWscWXlwX/dvHQES27lGRCvyFv3djHP6Plfd5mhPWRkmjnvqeOOSS0lZJYFYHJz994s6w=')

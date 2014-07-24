@@ -53,8 +53,8 @@ class HeaderVerifier(Verifier):
         :param headers:             A dictionary of headers from the HTTP request.
         :param secret:              The HMAC secret or RSA *public* key.
         :param required_headers:    Optional. A list of headers required to be present to validate, even if the signature is otherwise valid.  Defaults to ['date'].
-        :param method:              Optional. The HTTP method used in the request (eg. "GET"). Required for the '(request-line)' header.
-        :param path:                Optional. The HTTP path requested, exactly as sent (including query arguments and fragments). Required for the '(request-line)' header.
+        :param method:              Optional. The HTTP method used in the request (eg. "GET"). Required for the '(request-target)' header.
+        :param path:                Optional. The HTTP path requested, exactly as sent (including query arguments and fragments). Required for the '(request-target)' header.
         :param host:                Optional. The value to use for the Host header, if not supplied in :param:headers.
         """
         required_headers = required_headers or ['date']

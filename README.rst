@@ -7,14 +7,15 @@ httpsig
 .. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
     :target: https://travis-ci.org/ahknight/httpsig
 
-Sign HTTP requests with secure signatures according to the current IETF HTTP Signatures draft_ specification.  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 3`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
 
-See the original project_, original Python module_, original spec_, and current IETF draft_ for more details on the signing scheme.
+See the original project_, original Python module_, original spec_, and `current IETF draft`_ for more details on the signing scheme.
 
 .. _project: https://github.com/joyent/node-http-signature
 .. _module: https://github.com/zzsnzmn/py-http-signature
 .. _spec: https://github.com/joyent/node-http-signature/blob/master/http_signing.md
-.. _draft: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
+.. _`current IETF draft`: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
+.. _`Draft 3`: http://tools.ietf.org/html/draft-cavage-http-signatures-03
 
 Requirements
 ------------
@@ -54,7 +55,7 @@ For general use with web frameworks:
     key_id = "Some Key ID"
     secret = b'some big secret'
     
-    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hmac-sha256", headers=['(request-line)', 'host', 'date'])
+    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hmac-sha256", headers=['(request-target)', 'host', 'date'])
     signed_headers_dict = hs.sign({"Date": "Tue, 01 Jan 2014 01:01:01 GMT", "Host": "example.com"}, method="GET", path="/api/1/object/1")
 
 For use with requests:
