@@ -42,6 +42,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=True,
-    install_requires=['pycrypto', 'six'],
+    install_requires=['six', 'cryptography'],
     test_suite="httpsig.tests",
 )

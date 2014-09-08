@@ -1,2 +1,2 @@
-PyCrypto
 six
+cryptography
