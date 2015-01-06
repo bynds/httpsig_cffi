@@ -13,7 +13,7 @@ DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
 
 class Signer(object):
     """
-    When using an RSA algo, the secret is a PEM-encoded private key.
+    When using an RSA algo, the secret is a PEM-encoded private or public key.
     When using an HMAC algo, the secret is the HMAC signing secret.
 
     Password-protected keyfiles are not supported.
@@ -42,11 +42,8 @@ class Signer(object):
                 try:
                     self._rsa_public = serialization.load_pem_public_key(secret,
                                                                          backend=default_backend())
-
                 except ValueError as e:
                     raise HttpSigException("Invalid key.")
-
-
 
         elif self.sign_algorithm == 'hmac':
 
