@@ -3,9 +3,10 @@ Module to assist in verifying a signed header.
 """
 import six
 
-from Crypto.Hash import HMAC
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+
 from base64 import b64decode
 
 from .sign import Signer
@@ -29,9 +30,10 @@ class Verifier(Signer):
         if isinstance(signature, six.string_types): signature = signature.encode("ascii")
         
         if self.sign_algorithm == 'rsa':
-            h = self._hash.new()
+            
+            h = self._rsa.public_key().verifier(b64decode(signature), padding.PKCS1v15(), self._rsahash())
             h.update(data)
-            return self._rsa.verify(h, b64decode(signature))
+            return self._rsa.verify()
         
         elif self.sign_algorithm == 'hmac':
             h = self._sign_hmac(data)

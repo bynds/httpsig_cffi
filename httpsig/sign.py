@@ -1,9 +1,9 @@
 import base64
 import six
 
-from Crypto.Hash import HMAC
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
 from .utils import *
 
@@ -30,15 +30,20 @@ class Signer(object):
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
         
         if self.sign_algorithm == 'rsa':
+
             try:
-                rsa_key = RSA.importKey(secret)
-                self._rsa = PKCS1_v1_5.new(rsa_key)
-                self._hash = HASHES[self.hash_algorithm]
-            except ValueError:
+                self._rsahash = HASHES[self.hash_algorithm]
+                self._rsa = serialization.load_pem_traditional_openssl_private_key(secret, None, backend=default_backend())
+            except ValueError, e:
                 raise HttpSigException("Invalid key.")
+                         
+            
             
         elif self.sign_algorithm == 'hmac':
-            self._hash = HMAC.new(secret, digestmod=HASHES[self.hash_algorithm])
+            
+            self._hash = hmac.HMAC(secret,
+                                   HASHES[self.hash_algorithm](),
+                                   backend=default_backend())
 
     @property
     def algorithm(self):
@@ -46,15 +51,15 @@ class Signer(object):
 
     def _sign_rsa(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
-        h = self._hash.new()
-        h.update(data)
-        return self._rsa.sign(h)
+        r = self._rsa.signer(padding.PKCS1v15(), self._rsahash())
+        r.update(data)
+        return r.finalize()
 
     def _sign_hmac(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
         hmac = self._hash.copy()
         hmac.update(data)
-        return hmac.digest()
+        return hmac.finalize()
 
     def _sign(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
