@@ -25,7 +25,8 @@ class Signer(object):
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         if isinstance(secret, six.string_types): secret = secret.encode("ascii")
 
-        self._rsa = None
+        self._rsa_public = None
+        self._rsa_private = None
         self._hash = None
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
 
@@ -33,9 +34,17 @@ class Signer(object):
 
             try:
                 self._rsahash = HASHES[self.hash_algorithm]
-                self._rsa = serialization.load_pem_traditional_openssl_private_key(secret, None, backend=default_backend())
-            except ValueError, e:
-                raise HttpSigException("Invalid key.")
+                self._rsa_private = serialization.load_pem_private_key(secret,
+                                                                       None,
+                                                                       backend=default_backend())
+                self._rsa_public = self._rsa_private.public_key()
+            except ValueError as e:
+                try:
+                    self._rsa_public = serialization.load_pem_public_key(secret,
+                                                                         backend=default_backend())
+
+                except ValueError as e:
+                    raise HttpSigException("Invalid key.")
 
 
 
@@ -51,7 +60,7 @@ class Signer(object):
 
     def _sign_rsa(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
-        r = self._rsa.signer(padding.PKCS1v15(), self._rsahash())
+        r = self._rsa_private.signer(padding.PKCS1v15(), self._rsahash())
         r.update(data)
         return r.finalize()
 
@@ -64,7 +73,7 @@ class Signer(object):
     def _sign(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
         signed = None
-        if self._rsa:
+        if self._rsa_private:
             signed = self._sign_rsa(data)
         elif self._hash:
             signed = self._sign_hmac(data)
