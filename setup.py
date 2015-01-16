@@ -6,7 +6,7 @@ import versioneer
 versioneer.versionfile_source = 'httpsig/_version.py'
 versioneer.versionfile_build = 'httpsig/_version.py'
 versioneer.tag_prefix = 'v'                 # tags are like v1.2.0
-versioneer.parentdir_prefix = 'httpsig-'    # dirname like 'myproject-1.2.0'
+versioneer.parentdir_prefix = 'httpsig-cffi-'    # dirname like 'myproject-1.2.0'
 
 # create long description
 with open('README.rst') as file:
@@ -15,7 +15,7 @@ with open('CHANGELOG.rst') as file:
     long_description += '\n\n' + file.read()
 
 setup(
-    name='httpsig',
+    name='httpsig-cffi',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Secure HTTP request signing using the HTTP Signature draft specification",
@@ -35,9 +35,9 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     keywords='http,authorization,api,web',
-    author='Adam Knight',
-    author_email='adam@movq.us',
-    url='https://github.com/ahknight/httpsig',
+    author='HawkOwl',
+    author_email='hawkowl@atleastfornow.net',
+    url='https://github.com/hawkowl/httpsig',
     license='MIT',
     packages=find_packages(),
     include_package_data=True,

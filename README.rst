@@ -1,26 +1,27 @@
-httpsig
-=======
+httpsig-cffi
+============
 
-.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=master
-    :target: https://travis-ci.org/ahknight/httpsig
+.. image:: https://travis-ci.org/hawkowl/httpsig-cffi.svg?branch=master
+    :target: https://travis-ci.org/hawkowl/httpsig-cffi
 
-.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
-    :target: https://travis-ci.org/ahknight/httpsig
-
-Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 3`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 3`_).
+This is a fork of the fork_ of the original module_ that was made to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.
+This particular fork moves from PyCrypto to Cryptography, which provides PyPy support.
 
 See the original project_, original Python module_, original spec_, and `current IETF draft`_ for more details on the signing scheme.
 
 .. _project: https://github.com/joyent/node-http-signature
 .. _module: https://github.com/zzsnzmn/py-http-signature
+.. _fork: https://github.com/ahknight/httpsig
 .. _spec: https://github.com/joyent/node-http-signature/blob/master/http_signing.md
 .. _`current IETF draft`: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
 .. _`Draft 3`: http://tools.ietf.org/html/draft-cavage-http-signatures-03
 
+
 Requirements
 ------------
 
-* Python 2.7, 3.2, 3.3, 3.4 (or PyPy)
+* Python 2.7, 3.2, 3.3, 3.4, PyPy, PyPy3
 * Cryptography_
 
 Optional:
@@ -29,6 +30,7 @@ Optional:
 
 .. _Cryptography: https://pypi.python.org/pypi/cryptography
 .. _requests: https://pypi.python.org/pypi/requests
+
 
 Usage
 -----
@@ -39,18 +41,18 @@ For simple raw signing:
 
 .. code:: python
 
-    import httpsig
+    import httpsig-cffi as httpsig
 
     secret = open('rsa_private.pem', 'rb').read()
 
-    sig_maker = httpsig.Signer(secret=secret, algorithm='rsa-sha256')
+    sig_maker = httpsig-cffi.Signer(secret=secret, algorithm='rsa-sha256')
     sig_maker.sign('hello world!')
 
 For general use with web frameworks:
 
 .. code:: python
 
-    import httpsig
+    import httpsig-cffi as httpsig
 
     key_id = "Some Key ID"
     secret = b'some big secret'
@@ -64,7 +66,7 @@ For use with requests:
 
     import json
     import requests
-    from httpsig.requests_auth import HTTPSignatureAuth
+    from httpsig-cffi.requests_auth import HTTPSignatureAuth
 
     secret = open('rsa_private.pem', 'rb').read()
 
@@ -79,7 +81,7 @@ Note that keys and secrets should be bytes objects.  At attempt will be made to 
 
 .. code:: python
 
-    httpsig.Signer(secret, algorithm='rsa-sha256')
+    httpsig-cffi.Signer(secret, algorithm='rsa-sha256')
 
 ``secret``, in the case of an RSA signature, is a string containing private RSA pem. In the case of HMAC, it is a secret password.
 ``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``,
@@ -88,22 +90,20 @@ Note that keys and secrets should be bytes objects.  At attempt will be made to 
 
 .. code:: python
 
-    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
+    httpsig-cffi.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
 
 ``key_id`` is the label by which the server system knows your RSA signature or password.
 ``headers`` is the list of HTTP headers that are concatenated and used as signing objects. By default it is the specification's minimum, the ``Date`` HTTP header.
 ``secret`` and ``algorithm`` are as above.
+
 
 Tests
 -----
 
 To run tests::
 
-    python setup.py test
-
-or::
-
     tox
+
 
 License
 -------
