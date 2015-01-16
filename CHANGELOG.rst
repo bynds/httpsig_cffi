@@ -1,10 +1,15 @@
-httpsig Changes
----------------
+httpsig_cffi
+============
 
 15.0.0 (2015-Jan-16)
 --------------------
 
 * Move from PyCrypto to Cryptography.
+* Move to py.test.
+
+
+httpsig (previous)
+==================
 
 1.1.0 (2014-Jul-24)
 -------------------
@@ -24,14 +29,14 @@ httpsig Changes
 * Handle a case in the authorization header where there's garbage (non-keypairs) after the method name.
 
 1.0.1 (2014-Jul-02)
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 * Python 3 support (2.7 + 3.2-3.4)
 * Updated tox and Travis CI configs to test the supported Python versions.
 * Updated README.
 
 1.0.0 (2014-Jul-01)
-~~~~~~~~~~~~~~~~~~~
+-------------------
 * Written against http://tools.ietf.org/html/draft-cavage-http-signatures-02
 * Added "setup.py test" and tox support.
 * Added sign/verify unit tests for all currently-supported algorithms.
@@ -46,13 +51,13 @@ httpsig Changes
 * Removed suport for reading keyfiles from disk as this is a huge security hole if this is used in a server framework like drf-httpsig.
 
 1.0b1 (2014-Jun-23)
-~~~~~~~~~~~~~~~~~~~~~~
+-------------------
 * Removed HTTP version from request-line, per spec (breaks backwards compatability).
 * Removed auto-generation of missing Date header (ensures client compatability).
 
 
 http-signature (previous)
--------------------------
+=========================
 
 0.2.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
