@@ -42,6 +42,5 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=True,
-    install_requires=['six', 'cryptography'],
-    test_suite="httpsig_cffi.tests",
+    install_requires=['six', 'cryptography']
 )

@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import json
 import unittest
 
-import httpsig.sign as sign
-from httpsig.utils import parse_authorization_header
+import httpsig_cffi.sign as sign
+from httpsig_cffi.utils import parse_authorization_header
 
 
 sign.DEFAULT_SIGN_ALGORITHM = "rsa-sha256"
@@ -54,7 +54,7 @@ class TestSign(unittest.TestCase):
             'Content-Length': '18',
         }
         signed = hs.sign(unsigned, method='POST', path='/foo?param=value&pet=dog')
-        
+
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)
