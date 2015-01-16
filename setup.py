@@ -37,7 +37,7 @@ setup(
     keywords='http,authorization,api,web',
     author='HawkOwl',
     author_email='hawkowl@atleastfornow.net',
-    url='https://github.com/hawkowl/httpsig',
+    url='https://github.com/hawkowl/httpsig_cffi',
     license='MIT',
     packages=find_packages(),
     include_package_data=True,
