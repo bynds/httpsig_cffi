@@ -1,5 +1,5 @@
 include *.rst
 include *.txt
 include versioneer.py
-include httpsig/_version.py
-include httpsig/tests/*.pem
+include httpsig_cffi/_version.py
+include httpsig_cffi/tests/*.pem

@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 
 # versioneer config
 import versioneer
-versioneer.versionfile_source = 'httpsig/_version.py'
-versioneer.versionfile_build = 'httpsig/_version.py'
-versioneer.tag_prefix = 'v'                 # tags are like v1.2.0
-versioneer.parentdir_prefix = 'httpsig-cffi-'    # dirname like 'myproject-1.2.0'
+versioneer.versionfile_source = 'httpsig_cffi/_version.py'
+versioneer.versionfile_build = 'httpsig_cffi/_version.py'
+versioneer.tag_prefix = 'v'                      # tags are like v1.2.0
+versioneer.parentdir_prefix = 'httpsig_cffi-'    # dirname like 'myproject-1.2.0'
 
 # create long description
 with open('README.rst') as file:
@@ -15,7 +15,7 @@ with open('CHANGELOG.rst') as file:
     long_description += '\n\n' + file.read()
 
 setup(
-    name='httpsig-cffi',
+    name='httpsig_cffi',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Secure HTTP request signing using the HTTP Signature draft specification",
@@ -43,5 +43,5 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires=['six', 'cryptography'],
-    test_suite="httpsig-cffi.tests",
+    test_suite="httpsig_cffi.tests",
 )

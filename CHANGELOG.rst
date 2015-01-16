@@ -1,6 +1,11 @@
 httpsig Changes
 ---------------
 
+15.0.0 (2015-Jan-16)
+--------------------
+
+* Move from PyCrypto to Cryptography.
+
 1.1.0 (2014-Jul-24)
 -------------------
 
