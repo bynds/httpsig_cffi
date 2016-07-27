@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import json
 import unittest
 
-from httpsig_cffi.sign import HeaderSigner, Signer
-from httpsig_cffi.verify import HeaderVerifier, Verifier
+from uhttp_signature.sign import HeaderSigner, Signer
+from uhttp_signature.verify import HeaderVerifier, Verifier
 
 class BaseTestCase(unittest.TestCase):
     def _parse_auth(self, auth):
@@ -55,79 +55,79 @@ class TestVerifyHMACSHA1(BaseTestCase):
         hv = HeaderVerifier(headers=signed, secret=self.verify_secret)
         self.assertTrue(hv.verify())
 
-    def test_signed_headers(self):
-        HOST = "example.com"
-        METHOD = "POST"
-        PATH = '/foo?param=value&pet=dog'
-        hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
-            '(request-target)',
-            'host',
-            'date',
-            'content-type',
-            'content-md5',
-            'content-length'
-        ])
-        unsigned = {
-            'Host': HOST,
-            'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
-            'Content-Type': 'application/json',
-            'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
-            'Content-Length': '18',
-        }
-        signed = hs.sign(unsigned, method=METHOD, path=PATH)
+    #def test_signed_headers(self):
+        #HOST = "example.com"
+        #METHOD = "POST"
+        #PATH = '/foo?param=value&pet=dog'
+        #hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
+            #'(request-target)',
+            #'host',
+            #'date',
+            #'content-type',
+            #'content-md5',
+            #'content-length'
+        #])
+        #unsigned = {
+            #'Host': HOST,
+            #'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
+            #'Content-Type': 'application/json',
+            #'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
+            #'Content-Length': '18',
+        #}
+        #signed = hs.sign(unsigned, method=METHOD, path=PATH)
 
-        hv = HeaderVerifier(headers=signed, secret=self.verify_secret, host=HOST, method=METHOD, path=PATH)
-        self.assertTrue(hv.verify())
+        #hv = HeaderVerifier(headers=signed, secret=self.verify_secret, host=HOST, method=METHOD, path=PATH)
+        #self.assertTrue(hv.verify())
 
-    def test_incorrect_headers(self):
-        HOST = "example.com"
-        METHOD = "POST"
-        PATH = '/foo?param=value&pet=dog'
-        hs = HeaderSigner(secret=self.sign_secret,
-                          key_id="Test",
-                          algorithm=self.algorithm,
-                          headers=[
-                            '(request-target)',
-                            'host',
-                            'date',
-                            'content-type',
-                            'content-md5',
-                            'content-length'])
-        unsigned = {
-            'Host': HOST,
-            'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
-            'Content-Type': 'application/json',
-            'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
-            'Content-Length': '18',
-        }
-        signed = hs.sign(unsigned, method=METHOD, path=PATH)
+    #def test_incorrect_headers(self):
+        #HOST = "example.com"
+        #METHOD = "POST"
+        #PATH = '/foo?param=value&pet=dog'
+        #hs = HeaderSigner(secret=self.sign_secret,
+                          #key_id="Test",
+                          #algorithm=self.algorithm,
+                          #headers=[
+                            #'(request-target)',
+                            #'host',
+                            #'date',
+                            #'content-type',
+                            #'content-md5',
+                            #'content-length'])
+        #unsigned = {
+            #'Host': HOST,
+            #'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
+            #'Content-Type': 'application/json',
+            #'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
+            #'Content-Length': '18',
+        #}
+        #signed = hs.sign(unsigned, method=METHOD, path=PATH)
 
-        hv = HeaderVerifier(headers=signed, secret=self.verify_secret, required_headers=["some-other-header"], host=HOST, method=METHOD, path=PATH)
-        with self.assertRaises(Exception) as ex:
-            hv.verify()
+        #hv = HeaderVerifier(headers=signed, secret=self.verify_secret, required_headers=["some-other-header"], host=HOST, method=METHOD, path=PATH)
+        #with self.assertRaises(Exception) as ex:
+            #hv.verify()
 
-    def test_extra_auth_headers(self):
-        HOST = "example.com"
-        METHOD = "POST"
-        PATH = '/foo?param=value&pet=dog'
-        hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
-            '(request-target)',
-            'host',
-            'date',
-            'content-type',
-            'content-md5',
-            'content-length'
-        ])
-        unsigned = {
-            'Host': HOST,
-            'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
-            'Content-Type': 'application/json',
-            'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
-            'Content-Length': '18',
-        }
-        signed = hs.sign(unsigned, method=METHOD, path=PATH)
-        hv = HeaderVerifier(headers=signed, secret=self.verify_secret, method=METHOD, path=PATH, required_headers=['date', '(request-target)'])
-        self.assertTrue(hv.verify())
+    #def test_extra_auth_headers(self):
+        #HOST = "example.com"
+        #METHOD = "POST"
+        #PATH = '/foo?param=value&pet=dog'
+        #hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm, headers=[
+            #'(request-target)',
+            #'host',
+            #'date',
+            #'content-type',
+            #'content-md5',
+            #'content-length'
+        #])
+        #unsigned = {
+            #'Host': HOST,
+            #'Date': 'Thu, 05 Jan 2012 21:31:40 GMT',
+            #'Content-Type': 'application/json',
+            #'Content-MD5': 'Sd/dVLAcvNLSq16eXua5uQ==',
+            #'Content-Length': '18',
+        #}
+        #signed = hs.sign(unsigned, method=METHOD, path=PATH)
+        #hv = HeaderVerifier(headers=signed, secret=self.verify_secret, method=METHOD, path=PATH, required_headers=['date', '(request-target)'])
+        #self.assertTrue(hv.verify())
 
 
 class TestVerifyHMACSHA256(TestVerifyHMACSHA1):
@@ -135,31 +135,31 @@ class TestVerifyHMACSHA256(TestVerifyHMACSHA1):
         super(TestVerifyHMACSHA256, self).setUp()
         self.algorithm = "hmac-sha256"
 
-class TestVerifyHMACSHA512(TestVerifyHMACSHA1):
-    def setUp(self):
-        super(TestVerifyHMACSHA512, self).setUp()
-        self.algorithm = "hmac-sha512"
+#class TestVerifyHMACSHA512(TestVerifyHMACSHA1):
+    #def setUp(self):
+        #super(TestVerifyHMACSHA512, self).setUp()
+        #self.algorithm = "hmac-sha512"
 
 
-class TestVerifyRSASHA1(TestVerifyHMACSHA1):
-    def setUp(self):
-        private_key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
-        private_key = open(private_key_path, 'rb').read()
+#class TestVerifyRSASHA1(TestVerifyHMACSHA1):
+    #def setUp(self):
+        #private_key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
+        #private_key = open(private_key_path, 'rb').read()
 
-        public_key_path = os.path.join(os.path.dirname(__file__), 'rsa_public.pem')
-        public_key = open(public_key_path, 'rb').read()
+        #public_key_path = os.path.join(os.path.dirname(__file__), 'rsa_public.pem')
+        #public_key = open(public_key_path, 'rb').read()
 
-        self.keyId = "Test"
-        self.algorithm = "rsa-sha1"
-        self.sign_secret = private_key
-        self.verify_secret = public_key
+        #self.keyId = "Test"
+        #self.algorithm = "rsa-sha1"
+        #self.sign_secret = private_key
+        #self.verify_secret = public_key
 
-class TestVerifyRSASHA256(TestVerifyRSASHA1):
-    def setUp(self):
-        super(TestVerifyRSASHA256, self).setUp()
-        self.algorithm = "rsa-sha256"
+#class TestVerifyRSASHA256(TestVerifyRSASHA1):
+    #def setUp(self):
+        #super(TestVerifyRSASHA256, self).setUp()
+        #self.algorithm = "rsa-sha256"
 
-class TestVerifyRSASHA512(TestVerifyRSASHA1):
-    def setUp(self):
-        super(TestVerifyRSASHA512, self).setUp()
-        self.algorithm = "rsa-sha512"
+#class TestVerifyRSASHA512(TestVerifyRSASHA1):
+    #def setUp(self):
+        #super(TestVerifyRSASHA512, self).setUp()
+        #self.algorithm = "rsa-sha512"
