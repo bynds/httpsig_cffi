@@ -4,12 +4,12 @@ import hashlib
 import base64
 #import six
 
-try:
-    # Python 3
-    from urllib.request import parse_http_list
-except ImportError:
-    # Python 2
-    from urllib2 import parse_http_list
+#try:
+    ## Python 3
+from urllib.request import parse_http_list
+#except ImportError:
+    ## Python 2
+    #from urllib2 import parse_http_list
 
 #from cryptography.hazmat.primitives.hashes import SHA1, SHA256, SHA512
 from uhashlib import SHA1, SHA256
