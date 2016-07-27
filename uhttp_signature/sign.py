@@ -1,9 +1,11 @@
 import base64
-import six
+#import six
 
 #from cryptography.hazmat.backends import default_backend
 #from cryptography.hazmat.primitives import hashes, hmac, serialization
 #from cryptography.hazmat.primitives.asymmetric import rsa, padding
+
+import uhmac as hmac
 
 from .utils import *
 
@@ -23,13 +25,19 @@ class Signer(object):
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-        if isinstance(secret, six.string_types): secret = secret.encode("ascii")
+        # Removing the reference to six, now need to have a check for a bytes type
+        # TODO RSA cannot be reintroduced without this changing again.
+        #if isinstance(secret, six.string_types): secret = secret.encode("ascii")
+        if not isinstance(secret, (bytes, bytearray)):
+            raise TypeError("secret: expected bytes or bytearray, but got %r" % type(secret).__name__)        
 
+        # TODO RSA cannot be reintroduced without this changing again.
         #self._rsa_public = None
         #self._rsa_private = None
         self._hash = None
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
 
+        # TODO RSA cannot be reintroduced without this changing again.
         #if self.sign_algorithm == 'rsa':
 
             #try:
@@ -48,13 +56,14 @@ class Signer(object):
         if self.sign_algorithm == 'hmac':
 
             self._hash = hmac.HMAC(secret,
-                                   HASHES[self.hash_algorithm](),
-                                   backend=default_backend())
+                                   HASHES[self.hash_algorithm]())#,
+                                   #backend=default_backend()) # This is a cryptography thing
 
     @property
     def algorithm(self):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
-
+    
+    # TODO RSA cannot be reintroduced without this changing again.
     #def _sign_rsa(self, data):
         #if isinstance(data, six.string_types): data = data.encode("ascii")
         #r = self._rsa_private.signer(padding.PKCS1v15(), self._rsahash())
@@ -62,13 +71,19 @@ class Signer(object):
         #return r.finalize()
 
     def _sign_hmac(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
+        # TODO RSA cannot be reintroduced without this changing again.
+        #if isinstance(data, six.string_types): data = data.encode("ascii")
+        if not isinstance(data, (bytes, bytearray)):
+            raise TypeError("data: expected bytes or bytearray, but got %r" % type(data).__name__)
         hmac = self._hash.copy()
         hmac.update(data)
         return hmac.finalize()
 
     def _sign(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
+        # TODO RSA cannot be reintroduced without this changing again.
+        #if isinstance(data, six.string_types): data = data.encode("ascii")
+        if not isinstance(data, (bytes, bytearray)):
+            raise TypeError("data: expected bytes or bytearray, but got %r" % type(data).__name__)        
         signed = None
         #if self._rsa_private:
             #signed = self._sign_rsa(data)

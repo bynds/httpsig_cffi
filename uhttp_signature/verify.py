@@ -26,7 +26,8 @@ class Verifier(Signer):
         `data` is the message to verify
         `signature` is a base64-encoded signature to verify against `data`
         """
-
+        
+        # TODO RSA cannot be reintroduced without this changing again.
         #if isinstance(data, six.string_types): data = data.encode("ascii")
         #if isinstance(signature, six.string_types): signature = signature.encode("ascii")
 

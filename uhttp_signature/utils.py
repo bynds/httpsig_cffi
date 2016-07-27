@@ -2,7 +2,7 @@ import re
 import struct
 import hashlib
 import base64
-import six
+#import six
 
 try:
     # Python 3
@@ -14,6 +14,7 @@ except ImportError:
 #from cryptography.hazmat.primitives.hashes import SHA1, SHA256, SHA512
 from uhashlib import SHA1, SHA256
 
+# TODO RSA cannot be reintroduced without this changing again.
 #ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
 ALGORITHMS = frozenset(['hmac-sha1', 'hmac-sha256'])
 HASHES = {'sha1':   SHA1,
@@ -59,8 +60,10 @@ def generate_message(required_headers, headers, host=None, method=None, path=Non
 
 
 def parse_authorization_header(header):
-    if not isinstance(header, six.string_types):
-        header = header.decode("ascii") #HTTP headers cannot be Unicode.
+    #if not isinstance(header, six.string_types):
+        #header = header.decode("ascii") #HTTP headers cannot be Unicode.
+    if isinstance(secret, (bytes, bytearray)):
+        header = str(header)
     
     auth = header.split(" ", 1)
     if len(auth) > 2:
@@ -125,6 +128,7 @@ def lkv(d):
 def sig(d):
     return lkv(d)[1]
 
+# TODO RSA cannot be reintroduced without this changing again.
 #def is_rsa(keyobj):
     #return lkv(keyobj.blob)[0] == "ssh-rsa"
 
@@ -133,7 +137,8 @@ class CaseInsensitiveDict(dict):
     def __init__(self, d=None, **kwargs):
         super(CaseInsensitiveDict, self).__init__(**kwargs)
         if d:
-            self.update((k.lower(), v) for k, v in six.iteritems(d))
+            #self.update((k.lower(), v) for k, v in six.iteritems(d))
+            self.update((k.lower(), v) for k, v in dictionary.items(d))
 
     def __setitem__(self, key, value):
         super(CaseInsensitiveDict, self).__setitem__(key.lower(), value)
