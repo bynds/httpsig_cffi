@@ -11,12 +11,14 @@ except ImportError:
     # Python 2
     from urllib2 import parse_http_list
 
-from cryptography.hazmat.primitives.hashes import SHA1, SHA256, SHA512
+#from cryptography.hazmat.primitives.hashes import SHA1, SHA256, SHA512
+from uhashlib import SHA1, SHA256
 
-ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
+#ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
+ALGORITHMS = frozenset(['hmac-sha1', 'hmac-sha256'])
 HASHES = {'sha1':   SHA1,
-          'sha256': SHA256,
-          'sha512': SHA512}
+          'sha256': SHA256}#,
+          #'sha512': SHA512}
 
 
 class HttpSigException(Exception):
@@ -123,8 +125,8 @@ def lkv(d):
 def sig(d):
     return lkv(d)[1]
 
-def is_rsa(keyobj):
-    return lkv(keyobj.blob)[0] == "ssh-rsa"
+#def is_rsa(keyobj):
+    #return lkv(keyobj.blob)[0] == "ssh-rsa"
 
 # based on http://stackoverflow.com/a/2082169/151401
 class CaseInsensitiveDict(dict):
@@ -143,21 +145,21 @@ class CaseInsensitiveDict(dict):
         return super(CaseInsensitiveDict, self).__contains__(key.lower())
 
 # currently busted...
-def get_fingerprint(key):
-    """
-    Takes an ssh public key and generates the fingerprint.
+#def get_fingerprint(key):
+    #"""
+    #Takes an ssh public key and generates the fingerprint.
 
-    See: http://tools.ietf.org/html/rfc4716 for more info
-    """
-    if key.startswith('ssh-rsa'):
-        key = key.split(' ')[1]
-    else:
-        regex = r'\-{4,5}[\w|| ]+\-{4,5}'
-        key = re.split(regex, key)[1]
+    #See: http://tools.ietf.org/html/rfc4716 for more info
+    #"""
+    #if key.startswith('ssh-rsa'):
+        #key = key.split(' ')[1]
+    #else:
+        #regex = r'\-{4,5}[\w|| ]+\-{4,5}'
+        #key = re.split(regex, key)[1]
 
-    key = key.replace('\n', '')
-    key = key.strip().encode('ascii')
-    key = base64.b64decode(key)
-    fp_plain = hashlib.md5(key).hexdigest()
-    return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
+    #key = key.replace('\n', '')
+    #key = key.strip().encode('ascii')
+    #key = base64.b64decode(key)
+    #fp_plain = hashlib.md5(key).hexdigest()
+    #return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
 

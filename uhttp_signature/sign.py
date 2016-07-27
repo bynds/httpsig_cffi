@@ -1,9 +1,9 @@
 import base64
 import six
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, hmac, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+#from cryptography.hazmat.backends import default_backend
+#from cryptography.hazmat.primitives import hashes, hmac, serialization
+#from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
 from .utils import *
 
@@ -13,7 +13,7 @@ DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
 
 class Signer(object):
     """
-    When using an RSA algo, the secret is a PEM-encoded private or public key.
+    #When using an RSA algo, the secret is a PEM-encoded private or public key.
     When using an HMAC algo, the secret is the HMAC signing secret.
 
     Password-protected keyfiles are not supported.
@@ -25,27 +25,27 @@ class Signer(object):
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         if isinstance(secret, six.string_types): secret = secret.encode("ascii")
 
-        self._rsa_public = None
-        self._rsa_private = None
+        #self._rsa_public = None
+        #self._rsa_private = None
         self._hash = None
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
 
-        if self.sign_algorithm == 'rsa':
+        #if self.sign_algorithm == 'rsa':
 
-            try:
-                self._rsahash = HASHES[self.hash_algorithm]
-                self._rsa_private = serialization.load_pem_private_key(secret,
-                                                                       None,
-                                                                       backend=default_backend())
-                self._rsa_public = self._rsa_private.public_key()
-            except ValueError as e:
-                try:
-                    self._rsa_public = serialization.load_pem_public_key(secret,
-                                                                         backend=default_backend())
-                except ValueError as e:
-                    raise HttpSigException("Invalid key.")
+            #try:
+                #self._rsahash = HASHES[self.hash_algorithm]
+                #self._rsa_private = serialization.load_pem_private_key(secret,
+                                                                       #None,
+                                                                       #backend=default_backend())
+                #self._rsa_public = self._rsa_private.public_key()
+            #except ValueError as e:
+                #try:
+                    #self._rsa_public = serialization.load_pem_public_key(secret,
+                                                                         #backend=default_backend())
+                #except ValueError as e:
+                    #raise HttpSigException("Invalid key.")
 
-        elif self.sign_algorithm == 'hmac':
+        if self.sign_algorithm == 'hmac':
 
             self._hash = hmac.HMAC(secret,
                                    HASHES[self.hash_algorithm](),
@@ -55,11 +55,11 @@ class Signer(object):
     def algorithm(self):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
-    def _sign_rsa(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
-        r = self._rsa_private.signer(padding.PKCS1v15(), self._rsahash())
-        r.update(data)
-        return r.finalize()
+    #def _sign_rsa(self, data):
+        #if isinstance(data, six.string_types): data = data.encode("ascii")
+        #r = self._rsa_private.signer(padding.PKCS1v15(), self._rsahash())
+        #r.update(data)
+        #return r.finalize()
 
     def _sign_hmac(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
@@ -70,9 +70,9 @@ class Signer(object):
     def _sign(self, data):
         if isinstance(data, six.string_types): data = data.encode("ascii")
         signed = None
-        if self._rsa_private:
-            signed = self._sign_rsa(data)
-        elif self._hash:
+        #if self._rsa_private:
+            #signed = self._sign_rsa(data)
+        if self._hash:
             signed = self._sign_hmac(data)
         if not signed:
             raise SystemError('No valid encryptor found.')

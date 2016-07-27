@@ -1,12 +1,12 @@
 """
 Module to assist in verifying a signed header.
 """
-import six
+#import six
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, hmac, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.exceptions import InvalidSignature
+#from cryptography.hazmat.backends import default_backend
+#from cryptography.hazmat.primitives import hashes, hmac, serialization
+#from cryptography.hazmat.primitives.asymmetric import rsa, padding
+#from cryptography.exceptions import InvalidSignature
 
 from base64 import b64decode
 
@@ -18,7 +18,7 @@ class Verifier(Signer):
     """
     Verifies signed text against a secret.
     For HMAC, the secret is the shared secret.
-    For RSA, the secret is the PUBLIC key.
+    #For RSA, the secret is the PUBLIC key.
     """
     def _verify(self, data, signature):
         """
@@ -27,22 +27,22 @@ class Verifier(Signer):
         `signature` is a base64-encoded signature to verify against `data`
         """
 
-        if isinstance(data, six.string_types): data = data.encode("ascii")
-        if isinstance(signature, six.string_types): signature = signature.encode("ascii")
+        #if isinstance(data, six.string_types): data = data.encode("ascii")
+        #if isinstance(signature, six.string_types): signature = signature.encode("ascii")
 
-        if self.sign_algorithm == 'rsa':
+        #if self.sign_algorithm == 'rsa':
 
-            h = self._rsa_public.verifier(b64decode(signature),
-                                          padding.PKCS1v15(),
-                                          self._rsahash())
-            h.update(data)
-            try:
-                h.verify()
-                return True
-            except InvalidSignature:
-                return False
+            #h = self._rsa_public.verifier(b64decode(signature),
+                                          #padding.PKCS1v15(),
+                                          #self._rsahash())
+            #h.update(data)
+            #try:
+                #h.verify()
+                #return True
+            #except InvalidSignature:
+                #return False
 
-        elif self.sign_algorithm == 'hmac':
+        if self.sign_algorithm == 'hmac':
             h = self._sign_hmac(data)
             s = b64decode(signature)
             return (h == s)
@@ -60,7 +60,7 @@ class HeaderVerifier(Verifier):
         Instantiate a HeaderVerifier object.
 
         :param headers:             A dictionary of headers from the HTTP request.
-        :param secret:              The HMAC secret or RSA *public* key.
+        :param secret:              The HMAC secret #or RSA *public* key.
         :param required_headers:    Optional. A list of headers required to be present to validate, even if the signature is otherwise valid.  Defaults to ['date'].
         :param method:              Optional. The HTTP method used in the request (eg. "GET"). Required for the '(request-target)' header.
         :param path:                Optional. The HTTP path requested, exactly as sent (including query arguments and fragments). Required for the '(request-target)' header.
