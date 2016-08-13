@@ -38,17 +38,31 @@ class TestSign(unittest.TestCase):
             'Date': 'Thu, 05 Jan 2012 21:31:40 GMT'
         }
         signed = hs.sign(unsigned)
-        unittest.assertIn('date', signed)
-        unittest.assertEqual(unsigned['Date'], signed['date'])
-        unittest.assertIn('authorization', signed)
-        auth = parse_authorization_header(signed['authorization'])
-        params = auth[1]
-        unittest.assertIn('keyId', params)
-        unittest.assertIn('algorithm', params)
-        unittest.assertIn('signature', params)
-        unittest.assertEqual(params['keyId'], 'Test')
-        unittest.assertEqual(params['algorithm'], 'hmac-sha256')
-        unittest.assertEqual(params['signature'], 'wRVaco7A2umF369mZBuqgo+X9LqUWuiShvGKd+8MWuA=')
+        try:
+            unittest.assertIn('date', signed)
+            unittest.assertEqual(unsigned['Date'], signed['date'])
+            unittest.assertIn('authorization', signed)
+            auth = parse_authorization_header(signed['authorization'])
+            params = auth[1]
+            unittest.assertIn('keyId', params)
+            unittest.assertIn('algorithm', params)
+            unittest.assertIn('signature', params)
+            unittest.assertEqual(params['keyId'], 'Test')
+            unittest.assertEqual(params['algorithm'], 'hmac-sha256')
+            unittest.assertEqual(params['signature'], 'k/YLGmnxhgerdZbr+cPEjZ0bC82IaQzh4ktqNZJ4BLI=')
+        except AttributeError:
+            self.assertIn('date', signed)
+            self.assertEqual(unsigned['Date'], signed['date'])
+            self.assertIn('authorization', signed)
+            auth = parse_authorization_header(signed['authorization'])
+            params = auth[1]
+            self.assertIn('keyId', params)
+            self.assertIn('algorithm', params)
+            self.assertIn('signature', params)
+            self.assertEqual(params['keyId'], 'Test')
+            self.assertEqual(params['algorithm'], 'hmac-sha256')
+            self.assertEqual(params['signature'], 'k/YLGmnxhgerdZbr+cPEjZ0bC82IaQzh4ktqNZJ4BLI=')
+            
         gc.collect()
 
     def test_all(self):
@@ -64,17 +78,30 @@ class TestSign(unittest.TestCase):
             'Content-Length': '18',
         }
         signed = hs.sign(unsigned, method='POST', path='/foo?param=value&pet=dog')
-
-        unittest.assertIn('date', signed)
-        unittest.assertEqual(unsigned['Date'], signed['date'])
-        unittest.assertIn('authorization', signed)
-        auth = parse_authorization_header(signed['authorization'])
-        params = auth[1]
-        unittest.assertIn('keyId', params)
-        unittest.assertIn('algorithm', params)
-        unittest.assertIn('signature', params)
-        unittest.assertEqual(params['keyId'], 'Test')
-        unittest.assertEqual(params['algorithm'], 'hmac-sha256')
-        unittest.assertEqual(params['headers'], '(request-target) host date content-length')
-        unittest.assertEqual(params['signature'], 'Q6IqW/xtWgHPRhUyYEY0hAYQ7PKVvzhNDWgVx3TEtmc=')
+        try:
+            unittest.assertIn('date', signed)
+            unittest.assertEqual(unsigned['Date'], signed['date'])
+            unittest.assertIn('authorization', signed)
+            auth = parse_authorization_header(signed['authorization'])
+            params = auth[1]
+            unittest.assertIn('keyId', params)
+            unittest.assertIn('algorithm', params)
+            unittest.assertIn('signature', params)
+            unittest.assertEqual(params['keyId'], 'Test')
+            unittest.assertEqual(params['algorithm'], 'hmac-sha256')
+            unittest.assertEqual(params['headers'], '(request-target) host date content-length')
+            unittest.assertEqual(params['signature'], 'r2onjca8jKtgBun5rDMG4bNf8bIQEke2lBtlfySeS9U=')
+        except:
+            self.assertIn('date', signed)
+            self.assertEqual(unsigned['Date'], signed['date'])
+            self.assertIn('authorization', signed)
+            auth = parse_authorization_header(signed['authorization'])
+            params = auth[1]
+            self.assertIn('keyId', params)
+            self.assertIn('algorithm', params)
+            self.assertIn('signature', params)
+            self.assertEqual(params['keyId'], 'Test')
+            self.assertEqual(params['algorithm'], 'hmac-sha256')
+            self.assertEqual(params['headers'], '(request-target) host date content-length')
+            self.assertEqual(params['signature'], 'r2onjca8jKtgBun5rDMG4bNf8bIQEke2lBtlfySeS9U=')
         gc.collect()

@@ -84,7 +84,6 @@ class Signer(object):
         hmac_instance = hmac.new(self.secret, digestmod=HASHES[self.hash_algorithm])
         hmac_instance.update(data)
         gc.collect()
-        print(base64.b64encode(hmac_instance.digest()))
         return hmac_instance.digest()
 
     #@CheapLogger('_sign')
@@ -124,9 +123,7 @@ class HeaderSigner(Signer):
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
-        #print('Headers: {}'.format(headers))
         self.headers = headers or ['date']
-        #print('Self Headers: {}'.format(self.headers))
         self.signature_template = build_signature_template(key_id, algorithm, headers)
 
     #@CheapLogger('HeaderSigner.sign')
@@ -144,7 +141,6 @@ class HeaderSigner(Signer):
         headers.update((k.lower(), v) for k, v in arg_headers.items())
         required_headers = self.headers or ['date']
         signable = generate_message(required_headers, headers, host, method, path)
-        print(signable)
 
         signature = self._sign(signable)
         headers['authorization'] = self.signature_template % signature
