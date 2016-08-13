@@ -5,13 +5,16 @@ import base64
 #from cryptography.hazmat.primitives import hashes, hmac, serialization
 #from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
-import uhmac as hmac
+import gc
+
+try:
+    import uhmac as hmac
+except ImportError:
+    import hmac
 
 from .utils import *
 
-
 DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
-
 
 class Signer(object):
     """
@@ -20,6 +23,8 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
+    #@CheapLogger('Signer.Init')
+    #@GrimmReaper
     def __init__(self, secret, algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
@@ -54,13 +59,12 @@ class Signer(object):
                     #raise HttpSigException("Invalid key.")
 
         if self.sign_algorithm == 'hmac':
-
-            self._hash = hmac.HMAC(secret,
-                                   HASHES[self.hash_algorithm]())#,
-                                   #backend=default_backend()) # This is a cryptography thing
+            self._hash = True
+            self.secret = secret
 
     @property
     def algorithm(self):
+        gc.collect()
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
     
     # TODO RSA cannot be reintroduced without this changing again.
@@ -70,19 +74,26 @@ class Signer(object):
         #r.update(data)
         #return r.finalize()
 
+    #@CheapLogger('_sign_hmac')
+    #@GrimmReaper
     def _sign_hmac(self, data):
         # TODO RSA cannot be reintroduced without this changing again.
         #if isinstance(data, six.string_types): data = data.encode("ascii")
         if not isinstance(data, (bytes, bytearray)):
             raise TypeError("data: expected bytes or bytearray, but got %r" % type(data).__name__)
-        hmac = self._hash.copy()
-        hmac.update(data)
-        return hmac.finalize()
+        hmac_instance = hmac.new(self.secret, digestmod=HASHES[self.hash_algorithm])
+        hmac_instance.update(data)
+        gc.collect()
+        print(base64.b64encode(hmac_instance.digest()))
+        return hmac_instance.digest()
 
+    #@CheapLogger('_sign')
+    #@GrimmReaper
     def _sign(self, data):
         # TODO RSA cannot be reintroduced without this changing again.
         #if isinstance(data, six.string_types): data = data.encode("ascii")
         if not isinstance(data, (bytes, bytearray)):
+            gc.collect()
             raise TypeError("data: expected bytes or bytearray, but got %r" % type(data).__name__)        
         signed = None
         #if self._rsa_private:
@@ -90,7 +101,9 @@ class Signer(object):
         if self._hash:
             signed = self._sign_hmac(data)
         if not signed:
-            raise SystemError('No valid encryptor found.')
+            gc.collect()
+            raise ValueError('No valid encryptor found.')
+        gc.collect()
         return base64.b64encode(signed).decode("ascii")
 
 
@@ -104,15 +117,21 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
+    #@CheapLogger('HeaderSigner.init')
+    #@GrimmReaper
     def __init__(self, key_id, secret, algorithm=None, headers=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
+        #print('Headers: {}'.format(headers))
         self.headers = headers or ['date']
+        #print('Self Headers: {}'.format(self.headers))
         self.signature_template = build_signature_template(key_id, algorithm, headers)
 
-    def sign(self, headers, host=None, method=None, path=None):
+    #@CheapLogger('HeaderSigner.sign')
+    #@GrimmReaper
+    def sign(self, arg_headers, host=None, method=None, path=None):
         """
         Add Signature Authorization header to case-insensitive header dict.
 
@@ -121,11 +140,14 @@ class HeaderSigner(Signer):
         method is the HTTP method (required when using '(request-target)').
         path is the HTTP path (required when using '(request-target)').
         """
-        headers = CaseInsensitiveDict(headers)
+        headers = {}
+        headers.update((k.lower(), v) for k, v in arg_headers.items())
         required_headers = self.headers or ['date']
         signable = generate_message(required_headers, headers, host, method, path)
+        print(signable)
 
         signature = self._sign(signable)
         headers['authorization'] = self.signature_template % signature
 
+        gc.collect()
         return headers
