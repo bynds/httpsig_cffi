@@ -1,15 +1,7 @@
-#from requests.auth import AuthBase
-#try:
-    ## Python 3
-from urllib.parse import urlparse
-#except ImportError:
-    ## Python 2
-    #from urlparse import urlparse
-
 from .sign import HeaderSigner
 
 
-class HTTPSignatureAuth(AuthBase):
+class HTTPSignatureAuth:
     '''
     Sign a request using the http-signature scheme.
     https://github.com/joyent/node-http-signature/blob/master/http_signing.md
@@ -23,15 +15,13 @@ class HTTPSignatureAuth(AuthBase):
         headers = headers or []
         self.header_signer = HeaderSigner(key_id=key_id, secret=secret,
                 algorithm=algorithm, headers=headers)
-        self.uses_host = 'host' in [h.lower() for h in headers]
+        #self.uses_host = 'host' in [h.lower() for h in headers]
 
     def __call__(self, r):
         headers = self.header_signer.sign(
                 r.headers,
-                # 'Host' header unavailable in request object at this point
-                # if 'host' header is needed, extract it from the url
-                host=urlparse(r.url).netloc if self.uses_host else None,
+                # 'Host' header must be passed in as part of the request object (r)
+                host=r.host,
                 method=r.method,
                 path=r.path_url)
-        r.headers.update(headers)
-        return r
+        return headers

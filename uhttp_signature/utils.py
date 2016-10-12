@@ -223,3 +223,4 @@ def sig(d):
     #fp_plain = hashlib.md5(key).hexdigest()
     #return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
 
+
