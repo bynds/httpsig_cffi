@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 
 # versioneer config
 import versioneer
-versioneer.versionfile_source = 'httpsig_cffi/_version.py'
-versioneer.versionfile_build = 'httpsig_cffi/_version.py'
+versioneer.versionfile_source = 'uhttp_signature/_version.py'
+versioneer.versionfile_build = 'uhttp_signature/_version.py'
 versioneer.tag_prefix = 'v'                      # tags are like v1.2.0
-versioneer.parentdir_prefix = 'httpsig_cffi-'    # dirname like 'myproject-1.2.0'
+versioneer.parentdir_prefix = 'uhttp_signature-'    # dirname like 'myproject-1.2.0'
 
 # create long description
 with open('README.rst') as file:
